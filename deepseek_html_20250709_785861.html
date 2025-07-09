@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- [Keep all your existing head content exactly the same] -->
+    <style>
+        /* [Keep all your existing styles] */
+
+        /* Public Apps Grid Styles */
+        .public-apps-section {
+            padding: 60px 5%;
+            background-color: var(--white);
+        }
+
+        .public-apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .public-app-card {
+            background-size: cover;
+            background-position: center;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+
+        .public-app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 100%);
+            z-index: 1;
+        }
+
+        .public-app-card-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .public-app-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .public-app-card p {
+            color: rgba(255,255,255,0.9);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .public-app-card .price {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .public-app-card .free {
+            background-color: var(--primary-color);
+        }
+
+        /* Search Section for Public Page */
+        .public-search-section {
+            background-color: var(--white);
+            padding: 30px 5%;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* [Rest of your existing styles] */
+    </style>
+</head>
+<body>
+    <!-- [Keep all your existing body content until the main section] -->
+
+    <main>
+        <section class="hero">
+            <div class="welcome-message">Discover Amazing Apps</div>
+            <p class="tagline">Explore our collection of powerful applications</p>
+            <a href="#apps" id="startNowBtn" class="cta-btn">Browse Apps</a>
+        </section>
+
+        <section id="apps" class="public-apps-section">
+            <div class="public-search-section">
+                <h2>Find Your Next Favorite App</h2>
+                <div class="search-container">
+                    <input type="text" id="publicAppSearch" class="search-input" placeholder="Search apps...">
+                    <span class="search-icon"><i class="fas fa-search"></i></span>
+                </div>
+            </div>
+            
+            <div id="publicAppsGrid" class="public-apps-grid"></div>
+        </section>
+    </main>
+
+    <!-- [Keep your existing footer] -->
+
+    <script>
+        // [Keep your existing Firebase config and initialization]
+
+        // Load public apps
+        function loadPublicApps(searchTerm = '') {
+            const appsGrid = document.getElementById('publicAppsGrid');
+            appsGrid.innerHTML = '';
+            
+            let query = db.collection('apps');
+            
+            if (searchTerm) {
+                query = query.where('title', '>=', searchTerm)
+                            .where('title', '<=', searchTerm + '\uf8ff');
+            }
+            
+            query.get().then(snapshot => {
+                if (snapshot.empty) {
+                    appsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--gray-medium);">No apps found</p>';
+                    return;
+                }
+                
+                snapshot.forEach(doc => {
+                    const app = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'public-app-card';
+                    card.style.backgroundImage = `url(${app.thumbnail})`;
+                    card.onclick = () => {
+                        window.location.href = `/app?id=${doc.id}`;
+                    };
+
+                    card.innerHTML = `
+                        <div class="public-app-card-content">
+                            <h3>${app.title}</h3>
+                            <p>${app.description}</p>
+                            <span class="price ${app.isPaid ? '' : 'free'}">${app.isPaid ? `$${app.price}` : 'FREE'}</span>
+                        </div>
+                    `;
+                    
+                    appsGrid.appendChild(card);
+                });
+            });
+        }
+
+        // Search functionality for public page
+        document.getElementById('publicAppSearch').addEventListener('input', (e) => {
+            loadPublicApps(e.target.value.trim());
+        });
+
+        // Load apps on page load
+        window.addEventListener('load', () => {
+            loadPublicApps();
+        });
+
+        // [Keep the rest of your existing JavaScript]
+    </script>
+</body>
+</html>
