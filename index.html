@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>probe-app</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --probe-blue: #4A90E2;
+            --probe-dark: #0A1F3D;
+            --probe-light: #E8F2FF;
+            --probe-accent: #FF6B6B;
+            --white: #FFFFFF;
+            --black: #000000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--white);
+            color: var(--probe-dark);
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Enhanced Tech Reveal Animation */
+        .tech-reveal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Background gradient matching "joy colors" as in the logo background */
+            background: linear-gradient(135deg, #FFD700, #FFA500); /* Bright Yellow to Vibrant Orange */
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            animation: revealFade 2.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+
+        .tech-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px), /* Lighter grid for joy background */
+                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0;
+            animation: gridFade 2s 0.5s forwards;
+        }
+
+        .probe-logo {
+            width: 180px;
+            height: 180px;
+            background-color: transparent; /* Changed to transparent as logo has its own background */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: none; /* Removed or adjust as needed to match your new logo style */
+            position: relative;
+            z-index: 2;
+            transform: scale(0);
+            animation: logoScale 1.2s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .probe-logo-img { /* New style for the image */
+            width: 100%; /* Make the image fill the circular container */
+            height: 100%;
+            object-fit: contain; /* Ensures the whole logo is visible without cropping */
+            border-radius: 50%; /* If your logo is circular, this will help */
+        }
+        
+        /* Removed .probe-logo-inner styles as it's replaced by img */
+
+        .particle {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8); /* Particles to match the light background */
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat 4s infinite ease-in-out;
+        }
+
+        @keyframes revealFade {
+            0% { opacity: 1; }
+            80% { opacity: 0.9; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+
+        @keyframes gridFade {
+            from { opacity: 0; }
+            to { opacity: 0.6; }
+        }
+
+        @keyframes logoScale {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes particleFloat {
+            0%, 100% { 
+                transform: translate(0, 0); 
+                opacity: 0; 
+            }
+            50% { 
+                transform: translate(var(--tx), var(--ty)); 
+                opacity: 0.7; 
+            }
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background-color: var(--white);
+            box-shadow: 0 2px 15px rgba(10, 31, 61, 0.08);
+            position: relative;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--probe-blue);
+            text-decoration: none;
+            letter-spacing: 1.5px;
+        }
+
+        .nav-logo-icon { /* New style for the navigation logo image */
+            height: 40px; /* Adjust size as needed */
+            width: auto;
+            margin-right: 12px;
+            /* If your logo has its own colors, you might not need to set color here */
+        }
+        
+        /* Removed .logo-icon styles as it's replaced by img */
+
+        .auth-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .auth-btn {
+            background-color: var(--probe-blue);
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.25);
+        }
+
+        .auth-btn:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.35);
+        }
+
+        .user-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            cursor: pointer;
+            object-fit: cover;
+            border: 2px solid var(--probe-blue);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.3);
+        }
+
+        /* Fixed Auth Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 15px 40px rgba(10, 31, 61, 0.2);
+            position: relative;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--probe-dark);
+            transition: all 0.3s ease;
+            background: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-modal:hover {
+            color: var(--probe-accent);
+            background-color: rgba(255, 107, 107, 0.1);
+            transform: rotate(90deg);
+        }
+
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--probe-light);
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 18px 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--probe-dark);
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.5px;
+            position: relative;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .auth-tab.active {
+            opacity: 1;
+            color: var(--probe-blue);
+        }
+
+        .auth-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--probe-blue);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .auth-form-container {
+            padding: 30px;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: formFadeIn 0.4s ease;
+        }
+
+        @keyframes formFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--probe-dark);
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--probe-light);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: rgba(232, 242, 255, 0.3);
+        }
+
+        .form-group input:focus {
+            border-color: var(--probe-blue);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+            background-color: var(--white);
+        }
+
+        .submit-btn {
+            background-color: var(--probe-blue);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.25);
+        }
+
+        .github-auth {
+            background-color: var(--black);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .github-auth i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .github-auth:hover {
+            background-color: #222;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        /* User dropdown */
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            top: 80px;
+            right: 5%;
+            background-color: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(10, 31, 61, 0.15);
+            width: 240px;
+            z-index: 100;
+            overflow: hidden;
+            transform: translateY(10px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .user-dropdown.show {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .dropdown-item {
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--probe-dark);
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .dropdown-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            color: var(--probe-blue);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--probe-light);
+            color: var(--probe-blue);
+            padding-left: 25px;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--probe-light);
+            margin: 5px 0;
+        }
+
+        /* Main Content */
+        main {
+            padding: 60px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.2rem;
+            color: var(--probe-dark);
+            margin-bottom: 20px;
+            letter-spacing: 1.5px;
+            line-height: 1.2;
+        }
+
+        .hero h1 span {
+            color: var(--probe-blue);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--probe-dark);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+
+        .feature-card {
+            background-color: var(--white);
+            border-radius: 16px;
+            padding: 35px 30px;
+            box-shadow: 0 10px 30px rgba(10, 31, 61, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid var(--probe-light);
+            text-align: center;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(74, 144, 226, 0.1);
+            border-color: rgba(74, 144, 226, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 2.8rem;
+            color: var(--probe-blue);
+            margin-bottom: 25px;
+        }
+
+        .feature-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            margin-bottom: 18px;
+            color: var(--probe-dark);
+            letter-spacing: 1px;
+        }
+
+        .feature-card p {
+            color: var(--probe-dark);
+            line-height: 1.6;
+            opacity: 0.8;
+            font-size: 1.05rem;
+        }
+
+        .cta {
+            text-align: center;
+            background: linear-gradient(135deg, var(--probe-blue), #3a7bc8);
+            padding: 70px 40px;
+            border-radius: 16px;
+            color: var(--white);
+            margin-bottom: 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            animation: ctaPulse 8s infinite linear;
+        }
+
+        @keyframes ctaPulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .cta h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.6rem;
+            margin-bottom: 20px;
+            letter-spacing: 1.5px;
+            position: relative;
+        }
+
+        .cta p {
+            font-size: 1.15rem;
+            max-width: 600px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .cta-btn {
+            background-color: var(--white);
+            color: var(--probe-blue);
+            border: none;
+            padding: 16px 35px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.5px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            color: #3a7bc8;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--probe-dark);
+            color: var(--white);
+            padding: 70px 5% 30px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            display: inline-block;
+            color: var(--probe-blue);
+            letter-spacing: 1.5px;
+        }
+
+        .footer-logo-icon { /* New style for the footer logo image */
+            height: 30px; /* Adjust size as needed */
+            width: auto;
+            margin-right: 10px;
+            vertical-align: middle; /* Align with text */
+        }
+        
+        /* Removed .footer-logo i styles as it's replaced by img */
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .footer-link {
+            color: var(--white);
+            margin: 0 15px 15px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        .footer-link:hover {
+            opacity: 1;
+            color: var(--probe-blue);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .social-link {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 12px;
+            transition: all 0.3s ease;
+            color: var(--white);
+            font-size: 1.3rem;
+        }
+
+        .social-link:hover {
+            background-color: var(--probe-blue);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        .copyright {
+            font-size: 0.9rem;
+            opacity: 0.6;
+            margin-top: 30px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+            
+            .cta h2 {
+                font-size: 2.2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.4rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .cta {
+                padding: 50px 30px;
+            }
+
+            .cta h2 {
+                font-size: 2rem;
+            }
+
+            .feature-card {
+                padding: 30px 25px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            nav {
+                padding: 15px 5%;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .nav-logo-icon { /* Adjusted for smaller screens */
+                height: 30px; /* Smaller size for mobile */
+                margin-right: 8px;
+            }
+
+            .auth-btn {
+                padding: 8px 18px;
+            font-size: 0.9rem;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+        }
+
+        .hero p {
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .cta {
+            padding: 40px 25px;
+        }
+
+        .cta h2 {
+            font-size: 1.8rem;
+        }
+
+        .cta p {
+            font-size: 1rem;
+        }
+
+        .auth-tab {
+            padding: 16px 0;
+            font-size: 0.95rem;
+        }
+
+        .auth-form-container {
+            padding: 25px;
+        }
+
+        .footer-logo {
+            font-size: 1.7rem;
+        }
+
+        .footer-logo-icon { /* Adjusted for smaller screens */
+            height: 25px; /* Smaller size for mobile */
+        }
+
+        .social-link {
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="tech-reveal">
+        <div class="tech-grid"></div>
+        <div class="probe-logo">
+            <img src="YOUR_LIGHTNING_LOGO_URL_HERE" alt="probe-app logo" class="probe-logo-img">
+        </div>
+        <div class="particle" style="--tx: 50px; --ty: -30px; width: 8px; height: 8px; top: 30%; left: 25%;"></div>
+        <div class="particle" style="--tx: -40px; --ty: 20px; width: 6px; height: 6px; top: 45%; left: 60%;"></div>
+        <div class="particle" style="--tx: 30px; --ty: 40px; width: 10px; height: 10px; top: 60%; left: 40%;"></div>
+        <div class="particle" style="--tx: -60px; --ty: -20px; width: 5px; height: 5px; top: 25%; left: 70%;"></div>
+    </div>
+
+    <nav>
+        <a href="#" class="logo">
+            <img src="YOUR_LIGHTNING_LOGO_URL_HERE" alt="probe-app logo" class="nav-logo-icon">
+            <span>probe-app</span>
+        </a>
+        <div class="auth-section">
+            <button id="authButton" class="auth-btn">Sign In</button>
+            <img id="userAvatar" class="user-avatar" src="" alt="User Avatar" style="display: none;">
+        </div>
+    </nav>
+
+    <div id="userDropdown" class="user-dropdown">
+        <div class="dropdown-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </div>
+        <div class="dropdown-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div id="signOutBtn" class="dropdown-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sign Out</span>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="signin">Sign In</div>
+                <div class="auth-tab" data-tab="signup">Sign Up</div>
+            </div>
+            
+            <div class="auth-form-container">
+                <div id="signInForm" class="auth-form active">
+                    <div class="form-group">
+                        <label for="signin-email">Email</label>
+                        <input type="email" id="signin-email" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="signin-password">Password</label>
+                        <input type="password" id="signin-password" placeholder="Enter your password">
+                    </div>
+                    <button id="signInBtn" class="submit-btn">Sign In</button>
+                    <button id="githubSignIn" class="github-auth">
+                        <i class="fab fa-github"></i> Sign In with GitHub
+                    </button>
+                </div>
+                
+                <div id="signUpForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="signup-username">Username</label>
+                        <input type="text" id="signup-username" placeholder="Choose a username">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" placeholder="Create a password">
+                    </div>
+                    <button id="signUpBtn" class="submit-btn">Sign Up</button>
+                    <button id="githubSignUp" class="github-auth">
+                        <i class="fab fa-github"></i> Sign Up with GitHub
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <section class="hero">
+            <h1>Discover the Power of <span>probe-app</span></h1>
+            <p>Advanced analytics and monitoring solutions for the modern era. Our platform gives you unprecedented insights into your digital infrastructure.</p>
+            <button id="heroCta" class="auth-btn">Get Started</button>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-network"></i>
+                </div>
+                <h3>Real-time Analytics</h3>
+                <p>Monitor your systems with live data streams and comprehensive dashboards that update in real-time.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-check"></i>
+                </div>
+                <h3>Security First</h3>
+                <p>Enterprise-grade security protocols ensure your data remains protected at all times.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3>AI Integration</h3>
+                <p>Smart algorithms detect anomalies and predict issues before they affect your operations.</p>
+            </div>
+        </section>
+
+        <section class="cta">
+            <h2>Ready to Transform Your Monitoring?</h2>
+            <p>Join thousands of businesses who trust probe-app for their critical infrastructure monitoring needs.</p>
+            <button id="mainCta" class="cta-btn">Start Your Free Trial</button>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="YOUR_LIGHTNING_LOGO_URL_HERE" alt="probe-app logo" class="footer-logo-icon">probe-app
+            </div>
+            <div class="footer-links">
+                <a href="#" class="footer-link">About</a>
+                <a href="#" class="footer-link">Features</a>
+                <a href="#" class="footer-link">Pricing</a>
+                <a href="#" class="footer-link">Documentation</a>
+                <a href="#" class="footer-link">Contact</a>
+                <a href="#" class="footer-link">Careers</a>
+            </div>
+            <div class="social-links">
+                <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
+            </div>
+            <div class="copyright">
+                &copy; 2023 probe-app. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const firebaseConfig = {
+      apiKey: "AIzaSyBMUi291fwb-HSxlGPQMxdEJGUTiOOvFBs",
+      authDomain: "nexaverse-eeb07.firebaseapp.com",
+      projectId: "nexaverse-eeb07",
+      storageBucket: "nexaverse-eeb07.appspot.com",
+      messagingSenderId: "686342300627",
+      appId: "1:686342300627:web:90522d8f1129fb00b08526",
+    }; // Your config
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM Elements
+        const authButton = document.getElementById('authButton');
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+        const authModal = document.getElementById('authModal');
+        const modalContent = document.querySelector('.modal-content');
+        const closeModal = document.querySelector('.close-modal');
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const authForms = document.querySelectorAll('.auth-form');
+        const signInBtn = document.getElementById('signInBtn');
+        const signUpBtn = document.getElementById('signUpBtn');
+        const githubSignIn = document.getElementById('githubSignIn');
+        const githubSignUp = document.getElementById('githubSignUp');
+        const signOutBtn = document.getElementById('signOutBtn');
+        const heroCta = document.getElementById('heroCta');
+        const mainCta = document.getElementById('mainCta');
+
+        // Show modal with animation
+        function showModal() {
+            authModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                authModal.classList.add('show');
+            }, 10);
+        }
+
+        // Hide modal with animation
+        function hideModal() {
+            authModal.classList.remove('show');
+            setTimeout(() => {
+                authModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+
+        // Auth State Listener
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // User is signed in
+                authButton.style.display = 'none';
+                userAvatar.src = user.photoURL || `https://via.placeholder.com/46/4A90E2/FFFFFF?text=${user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}`;
+                userAvatar.style.display = 'block';
+                userAvatar.alt = user.displayName || user.email;
+                
+                // Check if user exists in Firestore
+                checkUserInFirestore(user);
+            } else {
+                // User is signed out
+                authButton.style.display = 'block';
+                userAvatar.style.display = 'none';
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // Check if user exists in Firestore or create new user
+        function checkUserInFirestore(user) {
+            const usersRef = db.collection('users').doc(user.uid);
+            
+            usersRef.get().then(doc => {
+                if (!doc.exists) {
+                    // User doesn't exist, create new user document
+                    const username = user.displayName || user.email.split('@')[0];
+                    const avatarUrl = user.photoURL || '';
+                    
+                    usersRef.set({
+                        username: username,
+                        email: user.email,
+                        avatarUrl: avatarUrl,
+                        role: 'user',
+                        subscribers: 0,
+                        following: 0,
+                        likes: 0,
+                        reputation: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(error => {
+                        console.error("Error adding user to Firestore:", error);
+                    });
+                } else {
+                    // Update last login time
+                    usersRef.update({
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(error => {
+                        console.error("Error updating user last login:", error);
+                    });
+                }
+            }).catch(error => {
+                console.error("Error getting user document:", error);
+            });
+        }
+
+        // GitHub Auth Provider
+        const githubProvider = new firebase.auth.GithubAuthProvider();
+        githubProvider.addScope('user:email');
+
+        // Event Listeners
+        authButton.addEventListener('click', showModal);
+        heroCta.addEventListener('click', showModal);
+        mainCta.addEventListener('click', () => {
+            showModal();
+            // Activate sign up tab
+            authTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector('.auth-tab[data-tab="signup"]').classList.add('active');
+            authForms.forEach(form => form.classList.remove('active'));
+            document.getElementById('signUpForm').classList.add('active');
+        });
+
+        closeModal.addEventListener('click', hideModal);
+
+        window.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                hideModal();
+            }
+        });
+
+        // Tab switching - REVISED for smoother transition
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.getAttribute('data-tab');
+                const targetForm = document.getElementById(`${tabName}Form`);
+
+                // First, deactivate all tabs and forms
+                authTabs.forEach(t => t.classList.remove('active'));
+                authForms.forEach(form => form.classList.remove('active'));
+
+                // Add active class to the clicked tab
+                tab.classList.add('active');
+
+                // Add active class to the target form immediately
+                targetForm.classList.add('active');
+            });
+        });
+
+        // Email/password sign in
+        signInBtn.addEventListener('click', () => {
+            const email = document.getElementById('signin-email').value;
+            const password = document.getElementById('signin-password').value;
+            
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    hideModal();
+                })
+                .catch(error => {
+                    alert(error.message);
+                    console.error("Sign in error:", error);
+                });
+        });
+
+        // Email/password sign up
+        signUpBtn.addEventListener('click', () => {
+            const username = document.getElementById('signup-username').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            if (!username || !email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Password should be at least 6 characters');
+                return;
+            }
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Update user profile with username
+                    return userCredential.user.updateProfile({
+                        displayName: username
+                    }).then(() => {
+                        // Add user to Firestore
+                        return db.collection('users').doc(userCredential.user.uid).set({
+                            username: username,
+                            email: email,
+                            avatarUrl: '',
+                            role: 'user',
+                            subscribers: 0,
+                            following: 0,
+                            likes: 0,
+                            reputation: 0,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                })
+                .then(() => {
+                    hideModal();
+                })
+                .catch(error => {
+                    alert(error.message);
+                    console.error("Sign up error:", error);
+                });
+        });
+
+        // GitHub sign in/up
+        function signInWithGitHub() {
+            auth.signInWithPopup(githubProvider)
+                .then((result) => {
+                    hideModal();
+                })
+                .catch(error => {
+                    alert(error.message);
+                    console.error("GitHub auth error:", error);
+                });
+        }
+
+        githubSignIn.addEventListener('click', signInWithGitHub);
+        githubSignUp.addEventListener('click', signInWithGitHub);
+
+        // User avatar click
+        userAvatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+
+        // Sign out
+        signOutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                userDropdown.classList.remove('show');
+            }).catch(error => {
+                console.error("Sign out error:", error);
+            });
+        });
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', () => {
+            if (userDropdown.classList.contains('show')) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        userDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Create more particles for the reveal animation
+        function createParticles() {
+            const reveal = document.querySelector('.tech-reveal');
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.cssText = `
+                    --tx: ${Math.random() * 100 - 50}px;
+                    --ty: ${Math.random() * 60 - 30}px;
+                    width: ${Math.random() * 6 + 4}px;
+                    height: ${Math.random() * 6 + 4}px;
+                    top: ${Math.random() * 80 + 10}%;
+                    left: ${Math.random() * 80 + 10}%;
+                    animation-delay: ${Math.random() * 2}s;
+                `;
+                reveal.appendChild(particle);
+            }
+        }
+
+        // Initialize particles
+        window.addEventListener('load', createParticles);
+    </script>
+</body>
+</html>
