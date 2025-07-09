@@ -10,13 +10,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* New Theme Colors - Modern & Sleek */
         :root {
-            --probe-blue: #4A90E2;
-            --probe-dark: #0A1F3D;
-            --probe-light: #E8F2FF;
-            --probe-accent: #FF6B6B;
+            --primary-color: #6A1B9A; /* Deep Purple */
+            --secondary-color: #D81B60; /* Vibrant Pink */
+            --dark-text: #212121; /* Dark Gray */
+            --light-bg: #F3E5F5; /* Light Purple */
             --white: #FFFFFF;
             --black: #000000;
+            --gray-light: #EEEEEE;
+            --gray-medium: #757575;
         }
 
         * {
@@ -27,26 +30,27 @@
 
         body {
             background-color: var(--white);
-            color: var(--probe-dark);
+            color: var(--dark-text);
             font-family: 'Montserrat', sans-serif;
             overflow-x: hidden;
         }
 
-        /* Enhanced Tech Reveal Animation */
+        /* Enhanced Tech Reveal Animation (Splash Screen) */
         .tech-reveal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* Background gradient matching "joy colors" as in the logo background */
-            background: linear-gradient(135deg, #FFD700, #FFA500); /* Bright Yellow to Vibrant Orange */
+            /* Background gradient for the intro */
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
             z-index: 1000;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             animation: revealFade 2.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            overflow: hidden; /* Ensure clouds don't cause scrollbars */
         }
 
         .tech-grid {
@@ -54,8 +58,8 @@
             width: 100%;
             height: 100%;
             background: 
-                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px), /* Lighter grid for joy background */
-                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+                linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px), 
+                linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
             background-size: 40px 40px;
             opacity: 0;
             animation: gridFade 2s 0.5s forwards;
@@ -64,33 +68,71 @@
         .probe-logo {
             width: 180px;
             height: 180px;
-            background-color: transparent; /* Changed to transparent as logo has its own background */
+            background-color: transparent;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: none; /* Removed or adjust as needed to match your new logo style */
+            box-shadow: none;
             position: relative;
             z-index: 2;
             transform: scale(0);
             animation: logoScale 1.2s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        .probe-logo-img { /* New style for the image */
-            width: 100%; /* Make the image fill the circular container */
+        .probe-logo-img {
+            width: 100%;
             height: 100%;
-            object-fit: contain; /* Ensures the whole logo is visible without cropping */
-            border-radius: 50%; /* If your logo is circular, this will help */
+            object-fit: contain;
+            border-radius: 50%;
         }
         
-        /* Removed .probe-logo-inner styles as it's replaced by img */
-
         .particle {
             position: absolute;
-            background-color: rgba(255, 255, 255, 0.8); /* Particles to match the light background */
+            background-color: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
             opacity: 0;
             animation: particleFloat 4s infinite ease-in-out;
+        }
+
+        /* Cloud Animation Styles */
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.7); /* Slightly transparent white */
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            animation: cloudMove 15s linear infinite;
+        }
+
+        .cloud:nth-child(1) {
+            width: 120px; height: 60px;
+            top: 20%; left: -10%;
+            animation-duration: 20s;
+            animation-delay: 0s;
+        }
+        .cloud:nth-child(2) {
+            width: 80px; height: 40px;
+            top: 50%; left: -5%;
+            animation-duration: 18s;
+            animation-delay: 3s;
+        }
+        .cloud:nth-child(3) {
+            width: 100px; height: 50px;
+            top: 70%; left: -15%;
+            animation-duration: 22s;
+            animation-delay: 6s;
+        }
+        .cloud:nth-child(4) {
+            width: 90px; height: 45px;
+            top: 35%; left: -20%;
+            animation-duration: 19s;
+            animation-delay: 9s;
+        }
+        .cloud:nth-child(5) {
+            width: 110px; height: 55px;
+            top: 10%; left: -25%;
+            animation-duration: 21s;
+            animation-delay: 12s;
         }
 
         @keyframes revealFade {
@@ -121,6 +163,11 @@
             }
         }
 
+        @keyframes cloudMove {
+            0% { transform: translateX(0); opacity: 0.7; }
+            100% { transform: translateX(150vw); opacity: 0; }
+        }
+
         /* Navigation */
         nav {
             display: flex;
@@ -128,7 +175,7 @@
             align-items: center;
             padding: 20px 5%;
             background-color: var(--white);
-            box-shadow: 0 2px 15px rgba(10, 31, 61, 0.08);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
             position: relative;
             z-index: 100;
         }
@@ -139,27 +186,24 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 1.8rem;
             font-weight: 600;
-            color: var(--probe-blue);
+            color: var(--primary-color);
             text-decoration: none;
             letter-spacing: 1.5px;
         }
 
-        .nav-logo-icon { /* New style for the navigation logo image */
-            height: 40px; /* Adjust size as needed */
+        .nav-logo-icon {
+            height: 40px;
             width: auto;
             margin-right: 12px;
-            /* If your logo has its own colors, you might not need to set color here */
         }
         
-        /* Removed .logo-icon styles as it's replaced by img */
-
         .auth-section {
             display: flex;
             align-items: center;
         }
 
         .auth-btn {
-            background-color: var(--probe-blue);
+            background-color: var(--primary-color);
             color: white;
             border: none;
             padding: 10px 22px;
@@ -169,13 +213,13 @@
             transition: all 0.3s ease;
             font-family: 'Montserrat', sans-serif;
             letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.25);
+            box-shadow: 0 4px 12px rgba(106, 27, 154, 0.25);
         }
 
         .auth-btn:hover {
-            background-color: #3a7bc8;
+            background-color: #8E24AA; /* Darker purple */
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.35);
+            box-shadow: 0 6px 16px rgba(106, 27, 154, 0.35);
         }
 
         .user-avatar {
@@ -184,17 +228,17 @@
             border-radius: 50%;
             cursor: pointer;
             object-fit: cover;
-            border: 2px solid var(--probe-blue);
+            border: 2px solid var(--primary-color);
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+            box-shadow: 0 4px 12px rgba(106, 27, 154, 0.2);
         }
 
         .user-avatar:hover {
             transform: scale(1.05);
-            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.3);
+            box-shadow: 0 6px 16px rgba(106, 27, 154, 0.3);
         }
 
-        /* Fixed Auth Modal */
+        /* Auth Modal */
         .modal {
             display: none;
             position: fixed;
@@ -214,7 +258,7 @@
             border-radius: 16px;
             width: 90%;
             max-width: 420px;
-            box-shadow: 0 15px 40px rgba(10, 31, 61, 0.2);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
             position: relative;
             transform: translateY(20px);
             opacity: 0;
@@ -232,7 +276,7 @@
             right: 18px;
             font-size: 1.5rem;
             cursor: pointer;
-            color: var(--probe-dark);
+            color: var(--dark-text);
             transition: all 0.3s ease;
             background: none;
             border: none;
@@ -245,14 +289,14 @@
         }
 
         .close-modal:hover {
-            color: var(--probe-accent);
-            background-color: rgba(255, 107, 107, 0.1);
+            color: var(--secondary-color);
+            background-color: rgba(216, 27, 96, 0.1);
             transform: rotate(90deg);
         }
 
         .auth-tabs {
             display: flex;
-            border-bottom: 1px solid var(--probe-light);
+            border-bottom: 1px solid var(--gray-light);
         }
 
         .auth-tab {
@@ -261,7 +305,7 @@
             padding: 18px 0;
             cursor: pointer;
             font-weight: 600;
-            color: var(--probe-dark);
+            color: var(--dark-text);
             font-family: 'Montserrat', sans-serif;
             letter-spacing: 0.5px;
             position: relative;
@@ -271,7 +315,7 @@
 
         .auth-tab.active {
             opacity: 1;
-            color: var(--probe-blue);
+            color: var(--primary-color);
         }
 
         .auth-tab.active::after {
@@ -281,7 +325,7 @@
             left: 0;
             width: 100%;
             height: 3px;
-            background-color: var(--probe-blue);
+            background-color: var(--primary-color);
             border-radius: 3px 3px 0 0;
         }
 
@@ -311,29 +355,29 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: var(--probe-dark);
+            color: var(--dark-text);
             font-size: 0.95rem;
         }
 
         .form-group input {
             width: 100%;
             padding: 14px 16px;
-            border: 1px solid var(--probe-light);
+            border: 1px solid var(--gray-light);
             border-radius: 8px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            background-color: rgba(232, 242, 255, 0.3);
+            background-color: var(--light-bg);
         }
 
         .form-group input:focus {
-            border-color: var(--probe-blue);
+            border-color: var(--primary-color);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+            box-shadow: 0 0 0 3px rgba(106, 27, 154, 0.15);
             background-color: var(--white);
         }
 
         .submit-btn {
-            background-color: var(--probe-blue);
+            background-color: var(--primary-color);
             color: white;
             border: none;
             padding: 14px;
@@ -349,9 +393,9 @@
         }
 
         .submit-btn:hover {
-            background-color: #3a7bc8;
+            background-color: #8E24AA;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.25);
+            box-shadow: 0 5px 15px rgba(106, 27, 154, 0.25);
         }
 
         .github-auth {
@@ -390,7 +434,7 @@
             right: 5%;
             background-color: var(--white);
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(10, 31, 61, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             width: 240px;
             z-index: 100;
             overflow: hidden;
@@ -409,7 +453,7 @@
             padding: 14px 20px;
             cursor: pointer;
             transition: all 0.3s;
-            color: var(--probe-dark);
+            color: var(--dark-text);
             display: flex;
             align-items: center;
             font-size: 0.95rem;
@@ -419,18 +463,18 @@
             margin-right: 12px;
             width: 20px;
             text-align: center;
-            color: var(--probe-blue);
+            color: var(--primary-color);
         }
 
         .dropdown-item:hover {
-            background-color: var(--probe-light);
-            color: var(--probe-blue);
+            background-color: var(--light-bg);
+            color: var(--primary-color);
             padding-left: 25px;
         }
 
         .dropdown-divider {
             height: 1px;
-            background-color: var(--probe-light);
+            background-color: var(--gray-light);
             margin: 5px 0;
         }
 
@@ -443,84 +487,54 @@
 
         .hero {
             text-align: center;
-            margin-bottom: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 120px); /* Adjust based on nav/footer height */
         }
 
-        .hero h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 3.2rem;
-            color: var(--probe-dark);
-            margin-bottom: 20px;
-            letter-spacing: 1.5px;
-            line-height: 1.2;
+        /* Hide elements within hero as requested */
+        .hero h1, .hero p {
+            display: none; 
         }
 
-        .hero h1 span {
-            color: var(--probe-blue);
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--probe-dark);
-            max-width: 700px;
-            margin: 0 auto 40px;
-            line-height: 1.6;
-            opacity: 0.9;
-        }
-
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 80px;
-        }
-
-        .feature-card {
-            background-color: var(--white);
-            border-radius: 16px;
-            padding: 35px 30px;
-            box-shadow: 0 10px 30px rgba(10, 31, 61, 0.05);
+        .hero #startNowBtn { /* Specific ID for the new button */
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.3rem;
             transition: all 0.3s ease;
-            border: 1px solid var(--probe-light);
-            text-align: center;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(74, 144, 226, 0.1);
-            border-color: rgba(74, 144, 226, 0.3);
-        }
-
-        .feature-icon {
-            font-size: 2.8rem;
-            color: var(--probe-blue);
-            margin-bottom: 25px;
-        }
-
-        .feature-card h3 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.6rem;
-            margin-bottom: 18px;
-            color: var(--probe-dark);
+            font-family: 'Montserrat', sans-serif;
             letter-spacing: 1px;
+            box-shadow: 0 6px 20px rgba(106, 27, 154, 0.3);
+            text-decoration: none; /* Make sure it doesn't look like a link */
+            display: inline-block; /* Allows padding and transformation */
+            margin-top: 0; /* Override any previous margin */
         }
 
-        .feature-card p {
-            color: var(--probe-dark);
-            line-height: 1.6;
-            opacity: 0.8;
-            font-size: 1.05rem;
+        .hero #startNowBtn:hover {
+            background-color: #8E24AA;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(106, 27, 154, 0.4);
         }
+        
+        /* Removed .features section CSS as it's being removed */
 
         .cta {
             text-align: center;
-            background: linear-gradient(135deg, var(--probe-blue), #3a7bc8);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             padding: 70px 40px;
             border-radius: 16px;
             color: var(--white);
             margin-bottom: 80px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         .cta::before {
@@ -530,7 +544,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
             animation: ctaPulse 8s infinite linear;
         }
 
@@ -558,7 +572,7 @@
 
         .cta-btn {
             background-color: var(--white);
-            color: var(--probe-blue);
+            color: var(--primary-color);
             border: none;
             padding: 16px 35px;
             border-radius: 30px;
@@ -575,12 +589,12 @@
         .cta-btn:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            color: #3a7bc8;
+            color: var(--secondary-color);
         }
 
         /* Footer */
         footer {
-            background-color: var(--probe-dark);
+            background-color: var(--dark-text);
             color: var(--white);
             padding: 70px 5% 30px;
             text-align: center;
@@ -596,19 +610,17 @@
             font-size: 2rem;
             margin-bottom: 30px;
             display: inline-block;
-            color: var(--probe-blue);
+            color: var(--primary-color);
             letter-spacing: 1.5px;
         }
 
-        .footer-logo-icon { /* New style for the footer logo image */
-            height: 30px; /* Adjust size as needed */
+        .footer-logo-icon {
+            height: 30px;
             width: auto;
             margin-right: 10px;
-            vertical-align: middle; /* Align with text */
+            vertical-align: middle;
         }
         
-        /* Removed .footer-logo i styles as it's replaced by img */
-
         .footer-links {
             display: flex;
             justify-content: center;
@@ -627,7 +639,7 @@
 
         .footer-link:hover {
             opacity: 1;
-            color: var(--probe-blue);
+            color: var(--primary-color);
         }
 
         .social-links {
@@ -651,9 +663,9 @@
         }
 
         .social-link:hover {
-            background-color: var(--probe-blue);
+            background-color: var(--primary-color);
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+            box-shadow: 0 5px 15px rgba(106, 27, 154, 0.3);
         }
 
         .copyright {
@@ -664,34 +676,18 @@
 
         /* Responsive adjustments */
         @media (max-width: 992px) {
-            .hero h1 {
-                font-size: 2.8rem;
-            }
-            
             .cta h2 {
                 font-size: 2.2rem;
             }
         }
 
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.4rem;
-            }
-
-            .hero p {
-                font-size: 1.1rem;
-            }
-
             .cta {
                 padding: 50px 30px;
             }
 
             .cta h2 {
                 font-size: 2rem;
-            }
-
-            .feature-card {
-                padding: 30px 25px;
             }
         }
 
@@ -704,63 +700,60 @@
                 font-size: 1.5rem;
             }
 
-            .nav-logo-icon { /* Adjusted for smaller screens */
-                height: 30px; /* Smaller size for mobile */
+            .nav-logo-icon {
+                height: 30px;
                 margin-right: 8px;
             }
 
             .auth-btn {
                 padding: 8px 18px;
-            font-size: 0.9rem;
-        }
+                font-size: 0.9rem;
+            }
 
-        .user-avatar {
-            width: 42px;
-            height: 42px;
-        }
+            .user-avatar {
+                width: 42px;
+                height: 42px;
+            }
 
-        .hero h1 {
-            font-size: 2rem;
-        }
+            .hero #startNowBtn {
+                padding: 14px 30px;
+                font-size: 1.1rem;
+            }
 
-        .hero p {
-            font-size: 1rem;
-            margin-bottom: 30px;
-        }
+            .cta {
+                padding: 40px 25px;
+            }
 
-        .cta {
-            padding: 40px 25px;
-        }
+            .cta h2 {
+                font-size: 1.8rem;
+            }
 
-        .cta h2 {
-            font-size: 1.8rem;
-        }
+            .cta p {
+                font-size: 1rem;
+            }
 
-        .cta p {
-            font-size: 1rem;
-        }
+            .auth-tab {
+                padding: 16px 0;
+                font-size: 0.95rem;
+            }
 
-        .auth-tab {
-            padding: 16px 0;
-            font-size: 0.95rem;
-        }
+            .auth-form-container {
+                padding: 25px;
+            }
 
-        .auth-form-container {
-            padding: 25px;
-        }
+            .footer-logo {
+                font-size: 1.7rem;
+            }
 
-        .footer-logo {
-            font-size: 1.7rem;
-        }
+            .footer-logo-icon {
+                height: 25px;
+            }
 
-        .footer-logo-icon { /* Adjusted for smaller screens */
-            height: 25px; /* Smaller size for mobile */
-        }
-
-        .social-link {
-            width: 45px;
-            height: 45px;
-            font-size: 1.2rem;
+            .social-link {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -774,6 +767,11 @@
         <div class="particle" style="--tx: -40px; --ty: 20px; width: 6px; height: 6px; top: 45%; left: 60%;"></div>
         <div class="particle" style="--tx: 30px; --ty: 40px; width: 10px; height: 10px; top: 60%; left: 40%;"></div>
         <div class="particle" style="--tx: -60px; --ty: -20px; width: 5px; height: 5px; top: 25%; left: 70%;"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
     </div>
 
     <nav>
@@ -851,33 +849,7 @@
 
     <main>
         <section class="hero">
-            <h1>Discover the Power of <span>probe-app</span></h1>
-            <p>Advanced analytics and monitoring solutions for the modern era. Our platform gives you unprecedented insights into your digital infrastructure.</p>
-            <button id="heroCta" class="auth-btn">Get Started</button>
-        </section>
-
-        <section class="features">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-chart-network"></i>
-                </div>
-                <h3>Real-time Analytics</h3>
-                <p>Monitor your systems with live data streams and comprehensive dashboards that update in real-time.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-shield-check"></i>
-                </div>
-                <h3>Security First</h3>
-                <p>Enterprise-grade security protocols ensure your data remains protected at all times.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <h3>AI Integration</h3>
-                <p>Smart algorithms detect anomalies and predict issues before they affect your operations.</p>
-            </div>
+            <button id="startNowBtn" class="auth-btn">Start Now</button>
         </section>
 
         <section class="cta">
@@ -890,7 +862,7 @@
     <footer>
         <div class="footer-content">
             <div class="footer-logo">
-                <img src="YOUR_LIGHTNING_LOGO_URL_HERE" alt="probe-app logo" class="footer-logo-icon">probe-app
+                <img src="https://i.ibb.co/Kxyq4qGh/Gemini-Generated-Image-uyuw4zuyuw4zuyuw-modified.png" alt="probe-app logo" class="footer-logo-icon">probe-app
             </div>
             <div class="footer-links">
                 <a href="#" class="footer-link">About</a>
@@ -913,6 +885,7 @@
     </footer>
 
     <script>
+        // Firebase Configuration
         const firebaseConfig = {
       apiKey: "AIzaSyBMUi291fwb-HSxlGPQMxdEJGUTiOOvFBs",
       authDomain: "nexaverse-eeb07.firebaseapp.com",
@@ -941,7 +914,7 @@
         const githubSignIn = document.getElementById('githubSignIn');
         const githubSignUp = document.getElementById('githubSignUp');
         const signOutBtn = document.getElementById('signOutBtn');
-        const heroCta = document.getElementById('heroCta');
+        const startNowBtn = document.getElementById('startNowBtn'); // New button
         const mainCta = document.getElementById('mainCta');
 
         // Show modal with animation
@@ -967,7 +940,7 @@
             if (user) {
                 // User is signed in
                 authButton.style.display = 'none';
-                userAvatar.src = user.photoURL || `https://via.placeholder.com/46/4A90E2/FFFFFF?text=${user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}`;
+                userAvatar.src = user.photoURL || `https://via.placeholder.com/46/6A1B9A/FFFFFF?text=${user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}`;
                 userAvatar.style.display = 'block';
                 userAvatar.alt = user.displayName || user.email;
                 
@@ -1024,7 +997,12 @@
 
         // Event Listeners
         authButton.addEventListener('click', showModal);
-        heroCta.addEventListener('click', showModal);
+        
+        // Start Now button redirection
+        startNowBtn.addEventListener('click', () => {
+            window.location.href = '/app/list'; // Redirect to /app/list
+        });
+
         mainCta.addEventListener('click', () => {
             showModal();
             // Activate sign up tab
