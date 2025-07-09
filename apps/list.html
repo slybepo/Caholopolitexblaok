@@ -787,7 +787,119 @@
 </head>
 <body>
     <!-- [Keep all your existing body content until the main section] -->
+<div class="full-page-background"></div>
 
+    <div class="tech-reveal">
+        <div class="tech-grid"></div>
+        <div class="probe-logo">
+            <img src="https://i.ibb.co/Kxyq4qGh/Gemini-Generated-Image-uyuw4zuyuw4zuyuw-modified.png" alt="Probe App Logo" class="probe-logo-img">
+        </div>
+        <div class="particle" style="--tx: 50px; --ty: -30px; width: 8px; height: 8px; top: 30%; left: 25%;"></div>
+        <div class="particle" style="--tx: -40px; --ty: 20px; width: 6px; height: 6px; top: 45%; left: 60%;"></div>
+        <div class="particle" style="--tx: 30px; --ty: 40px; width: 10px; height: 10px; top: 60%; left: 40%;"></div>
+        <div class="particle" style="--tx: -60px; --ty: -20px; width: 5px; height: 5px; top: 25%; left: 70%;"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+    </div>
+
+    <nav>
+        <a href="#" class="logo">
+            <img src="https://i.ibb.co/Kxyq4qGh/Gemini-Generated-Image-uyuw4zuyuw4zuyuw-modified.png" alt="Probe App Logo" class="nav-logo-icon">
+            <span>probe-app</span>
+        </a>
+        <div class="auth-section">
+            <div class="notification-bell" id="notificationBell">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" id="notificationBadge">3</span>
+            </div>
+            <button id="authButton" class="auth-btn">Sign In</button>
+            <img id="userAvatar" class="user-avatar" src="" alt="User Avatar" style="display: none;">
+        </div>
+
+        <div id="notificationPopup" class="notification-popup">
+            <h3>Notifications</h3>
+            <ul class="notification-list" id="notificationList">
+                <li class="notification-item unread">
+                    New feature: Dark Mode is now available!
+                    <small>2 hours ago</small>
+                </li>
+                <li class="notification-item">
+                    Your monthly report is ready.
+                    <small>Yesterday</small>
+                </li>
+                <li class="notification-item unread">
+                    System maintenance scheduled for 3 AM GMT.
+                    <small>3 days ago</small>
+                </li>
+            </ul>
+            <div class="no-notifications" style="display: none;">No new notifications.</div>
+        </div>
+    </nav>
+
+    <div id="userDropdown" class="user-dropdown">
+        <div class="dropdown-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </div>
+        <div class="dropdown-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div id="signOutBtn" class="dropdown-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sign Out</span>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="signin">Sign In</div>
+                <div class="auth-tab" data-tab="signup">Sign Up</div>
+            </div>
+
+            <div class="auth-form-container">
+                <div id="signInForm" class="auth-form active">
+                    <div class="form-group">
+                        <label for="signin-email">Email</label>
+                        <input type="email" id="signin-email" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="signin-password">Password</label>
+                        <input type="password" id="signin-password" placeholder="Enter your password">
+                    </div>
+                    <button id="signInBtn" class="submit-btn">Sign In</button>
+                    <button id="githubSignIn" class="github-auth">
+                        <i class="fab fa-github"></i> Sign In with GitHub
+                    </button>
+                </div>
+
+                <div id="signUpForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="signup-username">Username</label>
+                        <input type="text" id="signup-username" placeholder="Choose a username">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" placeholder="Create a password">
+                    </div>
+                    <button id="signUpBtn" class="submit-btn">Sign Up</button>
+                    <button id="githubSignUp" class="github-auth">
+                        <i class="fab fa-github"></i> Sign Up with GitHub
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <main>
         <section class="hero">
             <div class="welcome-message">Discover Amazing Apps</div>
