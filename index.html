@@ -1254,4 +1254,297 @@
         const authButton = document.getElementById('authButton');
         const userAvatar = document.getElementById('userAvatar');
         const userDropdown = document.getElementById('userDropdown');
-        const authModal =
+        const authModal = document.getElementById('authModal');
+        const closeModal = document.querySelector('.close-modal');
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const authForms = document.querySelectorAll('.auth-form');
+        const signInBtn = document.getElementById('signInBtn');
+        const signUpBtn = document.getElementById('signUpBtn');
+        const githubSignIn = document.getElementById('githubSignIn');
+        const githubSignUp = document.getElementById('githubSignUp');
+        const signOutBtn = document.getElementById('signOutBtn');
+        const heroCta = document.getElementById('startNowBtn'); // Changed to new ID
+        const mainCta = document.getElementById('mainCta');
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const notificationPopup = document.getElementById('notificationPopup');
+        const notificationList = document.getElementById('notificationList');
+        const noNotificationsMessage = document.querySelector('.no-notifications');
+
+        // Show modal with animation
+        function showModal() {
+            authModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                authModal.classList.add('show');
+            }, 10);
+        }
+
+        // Hide modal with animation
+        function hideModal() {
+            authModal.classList.remove('show');
+            setTimeout(() => {
+                authModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+
+        // Toggle Notification Popup
+        notificationBell.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent document click from closing it immediately
+            notificationPopup.classList.toggle('show');
+            // Mark all notifications as read when popup is opened
+            const unreadItems = notificationList.querySelectorAll('.unread');
+            unreadItems.forEach(item => item.classList.remove('unread'));
+            notificationBadge.style.display = 'none'; // Hide badge
+            // In a real app, you'd update this in your backend/database
+        });
+
+        // Close notification popup when clicking outside
+        window.addEventListener('click', (e) => {
+            if (notificationPopup.classList.contains('show') && !notificationPopup.contains(e.target) && e.target !== notificationBell) {
+                notificationPopup.classList.remove('show');
+            }
+        });
+
+        // Auth State Listener
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // User is signed in
+                authButton.style.display = 'none';
+                userAvatar.src = user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName ? user.displayName : user.email}&background=6A1B9A&color=FFFFFF&bold=true`;
+                userAvatar.style.display = 'block';
+                userAvatar.alt = user.displayName || user.email;
+
+                // Check if user exists in Firestore
+                checkUserInFirestore(user);
+            } else {
+                // User is signed out
+                authButton.style.display = 'block';
+                userAvatar.style.display = 'none';
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // Check if user exists in Firestore or create new user
+        function checkUserInFirestore(user) {
+            const usersRef = db.collection('users').doc(user.uid);
+
+            usersRef.get().then(doc => {
+                if (!doc.exists) {
+                    // User doesn't exist, create new user document
+                    const username = user.displayName || user.email.split('@')[0];
+                    const avatarUrl = user.photoURL || `https://ui-avatars.com/api/?name=${username}&background=6A1B9A&color=FFFFFF&bold=true`;
+
+                    usersRef.set({
+                        username: username,
+                        email: user.email,
+                        avatarUrl: avatarUrl,
+                        role: 'user',
+                        subscribers: 0,
+                        following: 0,
+                        likes: 0,
+                        reputation: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(error => {
+                        console.error("Error adding user to Firestore:", error);
+                    });
+                } else {
+                    // Update last login time
+                    usersRef.update({
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(error => {
+                        console.error("Error updating user last login:", error);
+                    });
+                }
+            }).catch(error => {
+                console.error("Error getting user document:", error);
+            });
+        }
+
+        // GitHub Auth Provider
+        const githubProvider = new firebase.auth.GithubAuthProvider();
+        githubProvider.addScope('user:email');
+
+        // Event Listeners
+        authButton.addEventListener('click', showModal);
+        heroCta.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default link behavior if it's an <a> tag
+            showModal();
+            // Activate sign up tab
+            authTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector('.auth-tab[data-tab="signup"]').classList.add('active');
+            authForms.forEach(form => form.classList.remove('active'));
+            document.getElementById('signUpForm').classList.add('active');
+        });
+        mainCta.addEventListener('click', () => {
+            showModal();
+            // Activate sign up tab
+            authTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector('.auth-tab[data-tab="signup"]').classList.add('active');
+            authForms.forEach(form => form.classList.remove('active'));
+            document.getElementById('signUpForm').classList.add('active');
+        });
+
+        closeModal.addEventListener('click', hideModal);
+
+        window.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                hideModal();
+            }
+        });
+
+        // Tab switching
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.getAttribute('data-tab');
+
+                // Update active tab
+                authTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Show corresponding form
+                authForms.forEach(form => {
+                    form.classList.remove('active');
+                    if (form.id === `${tabName}Form`) {
+                        setTimeout(() => {
+                            form.classList.add('active');
+                        }, 10);
+                    }
+                });
+            });
+        });
+
+        // Email/password sign in
+        signInBtn.addEventListener('click', () => {
+            const email = document.getElementById('signin-email').value;
+            const password = document.getElementById('signin-password').value;
+
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    hideModal();
+                })
+                .catch(error => {
+                    alert(error.message);
+                    console.error("Sign in error:", error);
+                });
+        });
+
+        // Email/password sign up
+        signUpBtn.addEventListener('click', () => {
+            const username = document.getElementById('signup-username').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+
+            if (!username || !email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password should be at least 6 characters');
+                return;
+            }
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Update user profile with username
+                    return userCredential.user.updateProfile({
+                        displayName: username
+                    }).then(() => {
+                        // Add user to Firestore
+                        return db.collection('users').doc(userCredential.user.uid).set({
+                            username: username,
+                            email: email,
+                            avatarUrl: `https://ui-avatars.com/api/?name=${username}&background=6A1B9A&color=FFFFFF&bold=true`,
+                            role: 'user',
+                            subscribers: 0,
+                            following: 0,
+                            likes: 0,
+                            reputation: 0,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                })
+                .then(() => {
+                    hideModal();
+                })
+                .catch(error => {
+                    alert(error.message);
+                    console.error("Sign up error:", error);
+                });
+        });
+
+        // GitHub sign in/up
+        function signInWithGitHub() {
+            auth.signInWithPopup(githubProvider)
+                .then((result) => {
+                    hideModal();
+                })
+                .catch(error => {
+                    alert(error.message);
+                    console.error("GitHub auth error:", error);
+                });
+        }
+
+        githubSignIn.addEventListener('click', signInWithGitHub);
+        githubSignUp.addEventListener('click', signInWithGitHub);
+
+        // User avatar click
+        userAvatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+
+        // Sign out
+        signOutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                userDropdown.classList.remove('show');
+            }).catch(error => {
+                console.error("Sign out error:", error);
+            });
+        });
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', (e) => {
+            if (userDropdown.classList.contains('show') && !userDropdown.contains(e.target) && e.target !== userAvatar) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        userDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Create more particles for the reveal animation
+        function createParticles() {
+            const reveal = document.querySelector('.tech-reveal');
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.cssText = `
+                    --tx: ${Math.random() * 100 - 50}px;
+                    --ty: ${Math.random() * 60 - 30}px;
+                    width: ${Math.random() * 6 + 4}px;
+                    height: ${Math.random() * 6 + 4}px;
+                    top: ${Math.random() * 80 + 10}%;
+                    left: ${Math.random() * 80 + 10}%;
+                    animation-delay: ${Math.random() * 2}s;
+                `;
+                reveal.appendChild(particle);
+            }
+        }
+
+        // Initialize particles on load
+        window.addEventListener('load', createParticles);
+    </script>
+</body>
+</html>
