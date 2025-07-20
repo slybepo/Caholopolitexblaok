@@ -678,4 +678,554 @@
             font-family: 'Montserrat', sans-serif;
             letter-spacing: 1px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-            text-decoration: none; /* Make sure it doesn't look like 
+            text-decoration: none; /* Make sure it doesn't look like a link */
+            display: inline-block; /* Allows padding and transformation */
+            margin-top: 0; /* Override any previous margin-top */
+        }
+
+        .hero #startNowBtn:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background-color: var(--light-bg);
+        }
+
+        .hero .welcome-message {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.8rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 30px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInWelcome 1s 2s forwards; /* Delay the animation */
+        }
+
+        .hero .tagline {
+            font-size: 1.4rem;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 800px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInTagline 1s 2.5s forwards; /* Delay further */
+        }
+
+        @keyframes fadeInWelcome {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInTagline {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .features-section {
+            background-color: var(--white);
+            padding: 80px 5%;
+            margin-top: 50px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .features-section h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            color: var(--primary-color);
+            margin-bottom: 60px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .features-section h2::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -15px;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary-color);
+            border-radius: 2px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            background-color: var(--light-bg);
+            border-radius: 16px;
+            padding: 35px 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(106, 27, 154, 0.1);
+            text-align: center;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(106, 27, 154, 0.15);
+            border-color: rgba(106, 27, 154, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3.2rem;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+        }
+
+        .feature-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 18px;
+            color: var(--dark-text);
+            letter-spacing: 1px;
+        }
+
+        .feature-card p {
+            color: var(--gray-medium);
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        .cta-section {
+            text-align: center;
+            background: var(--gradient-bg);
+            padding: 70px 40px;
+            border-radius: 16px;
+            color: var(--white);
+            margin-top: 80px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            animation: ctaPulse 8s infinite linear;
+        }
+
+        .cta-section h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            margin-bottom: 25px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-button {
+            background-color: var(--white);
+            color: var(--primary-color);
+            border: none;
+            padding: 16px 35px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background-color: var(--light-bg);
+        }
+
+        @keyframes ctaPulse {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 0.3; }
+            100% { transform: scale(0.8); opacity: 0.7; }
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark-text);
+            color: var(--white);
+            padding: 40px 5%;
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 50px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer-links {
+            margin-top: 15px;
+        }
+
+        .footer-links a {
+            color: var(--light-bg);
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--secondary-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                padding: 15px 5%;
+            }
+
+            .logo {
+                margin-bottom: 15px;
+            }
+
+            .auth-section {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .auth-btn, .user-avatar {
+                margin: 0 10px;
+            }
+
+            .hero .welcome-message {
+                font-size: 2.8rem;
+            }
+
+            .hero .tagline {
+                font-size: 1.1rem;
+            }
+
+            .features-section {
+                padding: 60px 5%;
+            }
+
+            .features-section h2 {
+                font-size: 2.2rem;
+            }
+
+            .feature-card {
+                padding: 25px 20px;
+            }
+
+            .feature-card h3 {
+                font-size: 1.5rem;
+            }
+
+            .feature-card p {
+                font-size: 0.95rem;
+            }
+
+            .cta-section {
+                padding: 50px 20px;
+            }
+
+            .cta-section h2 {
+                font-size: 2.2rem;
+            }
+
+            .cta-section p {
+                font-size: 1rem;
+            }
+
+            .cta-button {
+                padding: 14px 30px;
+                font-size: 1rem;
+            }
+
+            .modal-content {
+                width: 95%;
+            }
+
+            .auth-form-container {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .nav-logo-icon {
+                height: 30px;
+            }
+
+            .auth-btn {
+                padding: 8px 18px;
+                font-size: 0.9rem;
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+            }
+
+            .notification-popup {
+                width: 280px;
+                right: 2%;
+            }
+
+            .hero .welcome-message {
+                font-size: 2rem;
+            }
+
+            .hero .tagline {
+                font-size: 0.9rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="full-page-background">
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+    </div>
+
+    <div class="tech-reveal">
+        <div class="tech-grid"></div>
+        <div class="probe-logo">
+            <img src="https://i.ibb.co/Kxyq4qGh/Gemini-Generated-Image-uyuw4zuyuw4zuyuw-modified.png" alt="Probe App Logo" class="probe-logo-img">
+        </div>
+        </div>
+
+    <nav>
+        <a href="#" class="logo">
+            <img src="https://i.ibb.co/Kxyq4qGh/Gemini-Generated-Image-uyuw4zuyuw4zuyuw-modified.png" alt="Logo" class="nav-logo-icon">
+            PROBE
+        </a>
+        <div class="auth-section">
+            <div class="notification-bell" id="notificationBell">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+            </div>
+            <div class="notification-popup" id="notificationPopup">
+                <h3>Notifications</h3>
+                <ul class="notification-list" id="notificationList">
+                    </ul>
+                <p class="no-notifications" id="noNotificationsMessage">No new notifications.</p>
+            </div>
+
+            <button class="auth-btn" id="authBtn">Sign In</button>
+            <img src="https://via.placeholder.com/46" alt="User Avatar" class="user-avatar" id="userAvatar" style="display: none;">
+            
+            <div class="user-dropdown" id="userDropdown">
+                <div class="dropdown-item" id="myAppsLink">
+                    <i class="fas fa-th-large"></i> My Apps
+                </div>
+                <div class="dropdown-item" id="profileLink">
+                    <i class="fas fa-user-circle"></i> Profile
+                </div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="signOutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h1 class="welcome-message">Welcome to Probe!</h1>
+            <p class="tagline">Explore, create, and manage your applications with ease.</p>
+            <a href="#features" class="hero-button" id="startNowBtn">Get Started</a>
+        </section>
+
+        <section class="features-section" id="features">
+            <h2>Our Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-rocket feature-icon"></i>
+                    <h3>Blazing Fast</h3>
+                    <p>Experience unparalleled speed and responsiveness with our optimized platform.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-code feature-icon"></i>
+                    <h3>Easy Integration</h3>
+                    <p>Seamlessly integrate your existing tools and workflows with our flexible APIs.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-shield-alt feature-icon"></i>
+                    <h3>Secure & Reliable</h3>
+                    <p>Your data is protected with enterprise-grade security and robust infrastructure.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-cogs feature-icon"></i>
+                    <h3>Customizable</h3>
+                    <p>Tailor the platform to your exact needs with extensive customization options.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <h2>Ready to Launch Your Next Big Idea?</h2>
+            <p>Join thousands of innovators and start building with Probe today!</p>
+            <a href="#" class="cta-button" id="joinNowCta">Join Now</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Probe App. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Contact Us</a>
+        </div>
+    </footer>
+
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <button class="close-modal" id="closeModal">&times;</button>
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="signInTab">Sign In</div>
+                <div class="auth-tab" id="signUpTab">Sign Up</div>
+            </div>
+            <div class="auth-form-container">
+                <form class="auth-form active" id="signInForm">
+                    <div class="form-group">
+                        <label for="signInEmail">Email</label>
+                        <input type="email" id="signInEmail" placeholder="your.email@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signInPassword">Password</label>
+                        <input type="password" id="signInPassword" placeholder="********" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Sign In</button>
+                    <button type="button" class="github-auth" id="githubSignIn"><i class="fab fa-github"></i> Sign In with GitHub</button>
+                </form>
+
+                <form class="auth-form" id="signUpForm">
+                    <div class="form-group">
+                        <label for="signUpEmail">Email</label>
+                        <input type="email" id="signUpEmail" placeholder="your.email@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signUpPassword">Password</label>
+                        <input type="password" id="signUpPassword" placeholder="********" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" placeholder="********" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Sign Up</button>
+                    <button type="button" class="github-auth" id="githubSignUp"><i class="fab fa-github"></i> Sign Up with GitHub</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="appManagementModal">
+        <div class="modal-content">
+            <button class="close-modal" id="closeAppManagementModal">&times;</button>
+            <div class="auth-form-container">
+                <h2 style="text-align: center; color: var(--primary-color); font-family: 'Orbitron', sans-serif; margin-bottom: 25px;">My Apps</h2>
+                <div id="noAppsMessage" style="text-align: center; color: var(--gray-medium); display: none;">No apps created yet. Create one below!</div>
+                <div id="appList" class="app-list">
+                    </div>
+                <button class="submit-btn" id="openCreateAppModalBtn" style="margin-top: 20px;">Create New App</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="createEditAppModal">
+        <div class="modal-content">
+            <button class="close-modal" id="closeCreateEditAppModal">&times;</button>
+            <div class="auth-form-container">
+                <h2 id="appModalTitle" style="text-align: center; color: var(--primary-color); font-family: 'Orbitron', sans-serif; margin-bottom: 25px;">Create New App</h2>
+                <form id="appForm">
+                    <input type="hidden" id="appId">
+                    <div class="form-group">
+                        <label for="appName">App Name</label>
+                        <input type="text" id="appName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appDescription">Description</label>
+                        <textarea id="appDescription"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="appIcon">Icon URL</label>
+                        <input type="url" id="appIcon" placeholder="https://example.com/icon.png">
+                    </div>
+                    <button type="submit" class="submit-btn" id="saveAppBtn">Save App</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="confirmDeleteModal">
+        <div class="modal-content">
+            <div class="auth-form-container" style="text-align: center;">
+                <h2 style="color: var(--primary-color); font-family: 'Orbitron', sans-serif; margin-bottom: 20px;">Confirm Deletion</h2>
+                <p style="margin-bottom: 30px; color: var(--dark-text);">Are you sure you want to delete "<span id="appToDeleteName" style="font-weight: 600;"></span>"? This action cannot be undone.</p>
+                <button class="submit-btn" id="confirmDeleteBtn" style="background-color: var(--secondary-color);">Delete App</button>
+                <button class="submit-btn" id="cancelDeleteBtn" style="background-color: var(--gray-medium); margin-top: 15px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Get Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM Elements
+        const authBtn = document.getElementById('authBtn');
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+        const signOutBtn = document.getElementById('signOutBtn');
+        const authModal = document.getElementById('authModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const signInTab = document.getElementById('signInTab');
+        const signUpTab = document.getElementById('signUpTab');
+        const signInForm = document.getElementById('signInForm');
+        const signUpForm = document.getElementById('signUpForm');
+        const signInEmailInput = document.getElementById('signInEmail');
+        const signInPasswordInput = document.getElementById('signInPassword');
+        const signUpEmailInput = document.getElementById('signUpEmail');
+        const signUpPasswordInput = document.getElementById('signUpPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const githubSignInBtn = document.getElementById('githubSignIn');
+        const githubSignUpBtn = document.getElemen
