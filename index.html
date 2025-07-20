@@ -1708,13 +1708,15 @@
 
         closeModal.addEventListener('click', hideModal);
 
-        document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (appModal.classList.contains('show')) hideAppModal();
-                if (confirmModal.classList.contains('show')) hideConfirmModal();
-            });
-        });
-
+        // Replace your current close modal event listeners with this:
+document.querySelectorAll('.close-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (authModal.classList.contains('show')) hideModal();
+        if (appModal.classList.contains('show')) hideAppModal();
+        if (confirmModal.classList.contains('show')) hideConfirmModal();
+    });
+});
         // Tab switching
         authTabs.forEach(tab => {
             tab.addEventListener('click', () => {
