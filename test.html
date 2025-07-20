@@ -1721,4 +1721,56 @@
         });
 
         // Redirect to profile page (placeholder)
-        profileLink.addEventList
+        profileLink.addEventListener('click', () => {
+            alert('Profile page coming soon!');
+            userDropdown.classList.remove('show');
+        });
+
+
+        // Handle app creation confirmation outside app management modal
+        document.addEventListener('appCreated', (e) => {
+            const user = auth.currentUser;
+            if (user) {
+                db.collection('notifications').add({
+                    userId: user.uid,
+                    message: `Your app "${e.detail.appName}" has been successfully created!`,
+                    read: false,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        hideConfirmModal();
+                        loadApps();
+                    })
+                    .catch(error => {
+                        alert('Error deleting app: ' + error.message);
+                    });
+            });
+        });
+
+        // Cancel delete
+        document.getElementById('cancelDeleteBtn').addEventListener('click', hideConfirmModal);
+
+        // Create more particles for the reveal animation
+        function createParticles() {
+            const reveal = document.querySelector('.tech-reveal');
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.cssText = `
+                    --tx: ${Math.random() * 100 - 50}px;
+                    --ty: ${Math.random() * 60 - 30}px;
+                    width: ${Math.random() * 6 + 4}px;
+                    height: ${Math.random() * 6 + 4}px;
+                    top: ${Math.random() * 80 + 10}%;
+                    left: ${Math.random() * 80 + 10}%;
+                    animation-delay: ${Math.random() * 2}s;
+                `;
+                reveal.appendChild(particle);
+            }
+        }
+
+        // Initialize particles on load
+        window.addEventListener('load', createParticles);
+    </script>
+</body>
+</html>
