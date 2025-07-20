@@ -1228,4 +1228,497 @@
         const signUpPasswordInput = document.getElementById('signUpPassword');
         const confirmPasswordInput = document.getElementById('confirmPassword');
         const githubSignInBtn = document.getElementById('githubSignIn');
-        const githubSignUpBtn = document.getElemen
+        const githubSignUpBtn = document.getElementById('githubSignUp');
+        const appManagementModal = document.getElementById('appManagementModal');
+        const closeAppManagementModalBtn = document.getElementById('closeAppManagementModal');
+        const openCreateAppModalBtn = document.getElementById('openCreateAppModalBtn');
+        const createAppModal = document.getElementById('createEditAppModal');
+        const closeCreateAppModalBtn = document.getElementById('closeCreateEditAppModal');
+        const appForm = document.getElementById('appForm');
+        const appIdInput = document.getElementById('appId');
+        const appNameInput = document.getElementById('appName');
+        const appDescriptionInput = document.getElementById('appDescription');
+        const appIconInput = document.getElementById('appIcon');
+        const saveAppBtn = document.getElementById('saveAppBtn');
+        const appModalTitle = document.getElementById('appModalTitle');
+        const appList = document.getElementById('appList');
+        const noAppsMessage = document.getElementById('noAppsMessage');
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const appToDeleteName = document.getElementById('appToDeleteName');
+        const myAppsLink = document.getElementById('myAppsLink');
+        const profileLink = document.getElementById('profileLink');
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const notificationPopup = document.getElementById('notificationPopup');
+        const notificationList = document.getElementById('notificationList');
+        const noNotificationsMessage = document.getElementById('noNotificationsMessage');
+
+        let editAppId = null; // To store the ID of the app being edited
+
+        // --- Auth Modals & Tabs ---
+        function showAuthModal() {
+            authModal.style.display = 'flex';
+            setTimeout(() => authModal.classList.add('show'), 10); // For transition
+        }
+
+        function hideAuthModal() {
+            authModal.classList.remove('show');
+            setTimeout(() => authModal.style.display = 'none', 400); // Wait for transition
+        }
+
+        function switchAuthTab(tabName) {
+            signInTab.classList.remove('active');
+            signUpTab.classList.remove('active');
+            signInForm.classList.remove('active');
+            signUpForm.classList.remove('active');
+
+            if (tabName === 'signIn') {
+                signInTab.classList.add('active');
+                signInForm.classList.add('active');
+            } else {
+                signUpTab.classList.add('active');
+                signUpForm.classList.add('active');
+            }
+        }
+
+        authBtn.addEventListener('click', () => {
+            showAuthModal();
+            switchAuthTab('signIn'); // Default to sign in
+        });
+
+        closeModalBtn.addEventListener('click', hideAuthModal);
+
+        signInTab.addEventListener('click', () => switchAuthTab('signIn'));
+        signUpTab.addEventListener('click', () => switchAuthTab('signUp'));
+
+        // Close modal on outside click
+        window.addEventListener('click', (event) => {
+            if (event.target === authModal) {
+                hideAuthModal();
+            }
+            if (event.target === appManagementModal) {
+                hideAppManagementModal();
+            }
+            if (event.target === createAppModal) {
+                hideCreateEditAppModal();
+            }
+            if (event.target === confirmDeleteModal) {
+                hideConfirmModal();
+            }
+        });
+
+        // --- Firebase Auth ---
+
+        // Email/Password Sign In
+        signInForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = signInEmailInput.value;
+            const password = signInPasswordInput.value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                hideAuthModal();
+                alert('Signed in successfully!');
+            } catch (error) {
+                alert('Sign In Error: ' + error.message);
+            }
+        });
+
+        // Email/Password Sign Up
+        signUpForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = signUpEmailInput.value;
+            const password = signUpPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
+                hideAuthModal();
+                alert('Signed up successfully!');
+            } catch (error) {
+                alert('Sign Up Error: ' + error.message);
+            }
+        });
+
+        // GitHub Auth Provider
+        const githubProvider = new firebase.auth.GithubAuthProvider();
+
+        githubSignInBtn.addEventListener('click', async () => {
+            try {
+                await auth.signInWithPopup(githubProvider);
+                hideAuthModal();
+                alert('Signed in with GitHub successfully!');
+            } catch (error) {
+                alert('GitHub Sign In Error: ' + error.message);
+            }
+        });
+
+        githubSignUpBtn.addEventListener('click', async () => {
+            try {
+                await auth.signInWithPopup(githubProvider); // GitHub sign-up is essentially sign-in with pop-up
+                hideAuthModal();
+                alert('Signed up with GitHub successfully!');
+            } catch (error) {
+                alert('GitHub Sign Up Error: ' + error.message);
+            }
+        });
+
+        // Auth State Listener
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // User is signed in
+                authBtn.style.display = 'none';
+                userAvatar.style.display = 'block';
+                userAvatar.src = user.photoURL || 'https://via.placeholder.com/46'; // Use user photo or placeholder
+                loadApps();
+                listenForNotifications();
+            } else {
+                // User is signed out
+                authBtn.style.display = 'block';
+                userAvatar.style.display = 'none';
+                userDropdown.classList.remove('show');
+                appList.innerHTML = ''; // Clear app list
+                noAppsMessage.style.display = 'block'; // Show no apps message
+                notificationList.innerHTML = '';
+                notificationBadge.style.display = 'none';
+                noNotificationsMessage.style.display = 'block';
+            }
+        });
+
+        // Sign Out
+        signOutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                alert('Signed out successfully!');
+                userDropdown.classList.remove('show'); // Hide dropdown on sign out
+            } catch (error) {
+                alert('Sign Out Error: ' + error.message);
+            }
+        });
+
+        // Toggle User Dropdown
+        userAvatar.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent document click from closing immediately
+            userDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', (event) => {
+            if (!userDropdown.contains(event.target) && event.target !== userAvatar) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        userDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+
+        // --- App Management Modals ---
+        function showAppManagementModal() {
+            appManagementModal.style.display = 'flex';
+            setTimeout(() => appManagementModal.classList.add('show'), 10);
+        }
+
+        function hideAppManagementModal() {
+            appManagementModal.classList.remove('show');
+            setTimeout(() => appManagementModal.style.display = 'none', 400);
+        }
+
+        myAppsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAppManagementModal();
+            loadApps();
+        });
+
+        closeAppManagementModalBtn.addEventListener('click', hideAppManagementModal);
+
+        function showCreateEditAppModal(app = null) {
+            createAppModal.style.display = 'flex';
+            setTimeout(() => createAppModal.classList.add('show'), 10);
+
+            if (app) {
+                appModalTitle.textContent = 'Edit App';
+                appIdInput.value = app.id;
+                appNameInput.value = app.name;
+                appDescriptionInput.value = app.description;
+                appIconInput.value = app.icon || '';
+                editAppId = app.id;
+            } else {
+                appModalTitle.textContent = 'Create New App';
+                appForm.reset(); // Clear form for new app
+                appIdInput.value = '';
+                editAppId = null;
+            }
+        }
+
+        function hideCreateEditAppModal() {
+            createAppModal.classList.remove('show');
+            setTimeout(() => createAppModal.style.display = 'none', 400);
+        }
+
+        openCreateAppModalBtn.addEventListener('click', () => {
+            showCreateEditAppModal();
+        });
+
+        closeCreateAppModalBtn.addEventListener('click', hideCreateEditAppModal);
+
+        // --- App Data (Firestore) ---
+
+        // Save (Create/Edit) App
+        appForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = auth.currentUser;
+            if (!user) {
+                alert('You must be logged in to create/edit apps.');
+                return;
+            }
+
+            const appData = {
+                name: appNameInput.value,
+                description: appDescriptionInput.value,
+                icon: appIconInput.value,
+                userId: user.uid, // Link app to user
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                if (editAppId) {
+                    // Update existing app
+                    await db.collection('apps').doc(editAppId).update(appData);
+                    alert('App updated successfully!');
+                } else {
+                    // Create new app
+                    await db.collection('apps').add(appData);
+                    alert('App created successfully!');
+                }
+                hideCreateEditAppModal();
+                loadApps(); // Reload apps to show changes
+            } catch (error) {
+                alert('Error saving app: ' + error.message);
+            }
+        });
+
+        // Load Apps
+        async function loadApps() {
+            const user = auth.currentUser;
+            if (!user) {
+                appList.innerHTML = '';
+                noAppsMessage.style.display = 'block';
+                return;
+            }
+
+            try {
+                const querySnapshot = await db.collection('apps')
+                    .where('userId', '==', user.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                appList.innerHTML = ''; // Clear previous apps
+                if (querySnapshot.empty) {
+                    noAppsMessage.style.display = 'block';
+                } else {
+                    noAppsMessage.style.display = 'none';
+                    querySnapshot.forEach(doc => {
+                        const app = { id: doc.id, ...doc.data() };
+                        const appCard = `
+                            <div class="app-card">
+                                <img src="${app.icon || 'https://via.placeholder.com/60'}" alt="${app.name}" class="app-icon">
+                                <div class="app-info">
+                                    <h3>${app.name}</h3>
+                                    <p>${app.description || 'No description provided.'}</p>
+                                </div>
+                                <div class="app-actions">
+                                    <button class="edit-app-btn" data-id="${app.id}"><i class="fas fa-edit"></i></button>
+                                    <button class="delete-app-btn" data-id="${app.id}" data-name="${app.name}"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </div>
+                        `;
+                        appList.innerHTML += appCard;
+                    });
+
+                    // Add event listeners to new buttons
+                    document.querySelectorAll('.edit-app-btn').forEach(button => {
+                        button.addEventListener('click', async (e) => {
+                            const appId = e.currentTarget.dataset.id;
+                            const appDoc = await db.collection('apps').doc(appId).get();
+                            if (appDoc.exists) {
+                                showCreateEditAppModal({ id: appDoc.id, ...appDoc.data() });
+                            }
+                        });
+                    });
+
+                    document.querySelectorAll('.delete-app-btn').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            const appId = e.currentTarget.dataset.id;
+                            const appName = e.currentTarget.dataset.name;
+                            showConfirmModal(appId, appName);
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading apps:', error);
+                alert('Error loading apps: ' + error.message);
+            }
+        }
+
+        // --- Delete Confirmation Modal ---
+        let appIdToDelete = null;
+
+        function showConfirmModal(appId, appName) {
+            appIdToDelete = appId;
+            appToDeleteName.textContent = appName;
+            confirmDeleteModal.style.display = 'flex';
+            setTimeout(() => confirmDeleteModal.classList.add('show'), 10);
+        }
+
+        function hideConfirmModal() {
+            confirmDeleteModal.classList.remove('show');
+            setTimeout(() => confirmDeleteModal.style.display = 'none', 400);
+            appIdToDelete = null;
+        }
+
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (!appIdToDelete) return;
+
+            const user = auth.currentUser;
+            if (!user) {
+                alert('You must be logged in to delete apps.');
+                return;
+            }
+
+            try {
+                // Optional: Add a notification for app deletion
+                await db.collection('notifications').add({
+                    userId: user.uid,
+                    message: `Your app "${appToDeleteName.textContent}" was deleted.`,
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('apps').doc(appIdToDelete).delete();
+                alert('App deleted successfully!');
+                hideConfirmModal();
+                loadApps();
+            } catch (error) {
+                alert('Error deleting app: ' + error.message);
+            }
+        });
+
+        cancelDeleteBtn.addEventListener('click', hideConfirmModal);
+
+
+        // --- Notifications ---
+        function showNotificationPopup() {
+            notificationPopup.classList.add('show');
+        }
+
+        function hideNotificationPopup() {
+            notificationPopup.classList.remove('show');
+        }
+
+        notificationBell.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent document click from closing immediately
+            notificationPopup.classList.toggle('show');
+            if (notificationPopup.classList.contains('show')) {
+                markAllNotificationsAsRead();
+            }
+        });
+
+        // Close notification popup when clicking outside
+        window.addEventListener('click', (event) => {
+            if (!notificationPopup.contains(event.target) && event.target !== notificationBell && !notificationBell.contains(event.target)) {
+                hideNotificationPopup();
+            }
+        });
+
+
+        async function listenForNotifications() {
+            const user = auth.currentUser;
+            if (!user) {
+                notificationList.innerHTML = '';
+                notificationBadge.style.display = 'none';
+                noNotificationsMessage.style.display = 'block';
+                return;
+            }
+
+            // Real-time listener for notifications
+            db.collection('notifications')
+                .where('userId', '==', user.uid)
+                .orderBy('createdAt', 'desc')
+                .onSnapshot(snapshot => {
+                    notificationList.innerHTML = ''; // Clear existing
+                    let unreadCount = 0;
+
+                    if (snapshot.empty) {
+                        noNotificationsMessage.style.display = 'block';
+                    } else {
+                        noNotificationsMessage.style.display = 'none';
+                        snapshot.forEach(doc => {
+                            const notification = { id: doc.id, ...doc.data() };
+                            const timestamp = notification.createdAt ? new Date(notification.createdAt.toDate()).toLocaleString() : 'Just now';
+                            const notificationItem = `
+                                <li class="notification-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}">
+                                    ${notification.message}
+                                    <small>${timestamp}</small>
+                                </li>
+                            `;
+                            notificationList.innerHTML += notificationItem;
+
+                            if (!notification.read) {
+                                unreadCount++;
+                            }
+                        });
+                    }
+
+                    // Update badge
+                    if (unreadCount > 0) {
+                        notificationBadge.textContent = unreadCount;
+                        notificationBadge.style.display = 'block';
+                    } else {
+                        notificationBadge.style.display = 'none';
+                    }
+                }, error => {
+                    console.error("Error listening to notifications: ", error);
+                });
+        }
+
+        async function markAllNotificationsAsRead() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            try {
+                const unreadNotifications = await db.collection('notifications')
+                    .where('userId', '==', user.uid)
+                    .where('read', '==', false)
+                    .get();
+
+                const batch = db.batch();
+                unreadNotifications.forEach(doc => {
+                    batch.update(doc.ref, { read: true });
+                });
+                await batch.commit();
+            } catch (error) {
+                console.error("Error marking notifications as read: ", error);
+            }
+        }
+
+        // --- Initial Load ---
+        // Ensure app data is loaded on page load if user is already signed in
+        window.addEventListener('load', () => {
+            if (auth.currentUser) {
+                loadApps();
+                listenForNotifications();
+            }
+        });
+
+        // Redirect to profile page (placeholder)
+        profileLink.addEventList
