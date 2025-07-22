@@ -1669,16 +1669,7 @@
         }
 
         // Event Listeners
-        authButton.addEventListener('click', showModal);
-        heroCta.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent default link behavior if it's an <a> tag
-            showModal();
-            // Activate sign up tab
-            authTabs.forEach(t => t.classList.remove('active'));
-            document.querySelector('.auth-tab[data-tab="signup"]').classList.add('active');
-            authForms.forEach(form => form.classList.remove('active'));
-            document.getElementById('signUpForm').classList.add('active');
-        });
+        
         mainCta.addEventListener('click', () => {
             showModal();
             // Activate sign up tab
