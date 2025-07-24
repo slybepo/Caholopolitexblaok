@@ -404,12 +404,7 @@
             <img id="userAvatar" class="user-avatar" src="" alt="User Avatar" style="display: none;">
         </div>
 
-        <div id="notificationPopup" class="notification-popup">
-            <h3>Notifications</h3>
-            <ul class="notification-list" id="notificationList">
-                
-            </ul>
-        </div>
+        
 
         <div id="userDropdown" class="user-dropdown">
             <div class="dropdown-item">
@@ -496,288 +491,171 @@
     </div>
 
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBMUi291fwb-HSxlGPQMxdEJGUTiOOvFBs",
-            authDomain: "nexaverse-eeb07.firebaseapp.com",
-            projectId: "nexaverse-eeb07",
-            storageBucket: "nexaverse-eeb07.appspot.com",
-            messagingSenderId: "686342300627",
-            appId: "1:686342300627:web:90522d8f1129fb00b08526",
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBMUi291fwb-HSxlGPQMxdEJGUTiOOvFBs",
+    authDomain: "nexaverse-eeb07.firebaseapp.com",
+    projectId: "nexaverse-eeb07",
+    storageBucket: "nexaverse-eeb07.appspot.com",
+    messagingSenderId: "686342300627",
+    appId: "1:686342300627:web:90522d8f1129fb00b08526",
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// DOM Elements
+const authButton = document.getElementById('authButton');
+const userAvatar = document.getElementById('userAvatar');
+const userDropdown = document.getElementById('userDropdown');
+const notificationBell = document.getElementById('notificationBell');
+const notificationBadge = document.getElementById('notificationBadge');
+const notificationPopup = document.getElementById('notificationPopup');
+const notificationList = document.getElementById('notificationList');
+const signOutBtn = document.getElementById('signOutBtn');
+const appSubmissionForm = document.getElementById('appSubmissionForm');
+const submitBtn = document.getElementById('submitBtn');
+const successModal = document.getElementById('successModal');
+const modalEmail = document.getElementById('modalEmail');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+// Discord Webhook URL (decoded)
+const DISCORD_WEBHOOK_URL = 'https://l.webhook.party/hook/2qAuSmcvDcC04P97sfMdLbW9SQrbO9a9wKMfwqrV68LdbABBC+wpOrb6g5MWbNRR+gS8dcHbSIRbNWfouABeWRwLnowFKNoxJ8Pvag2Ztx+o/stIkt+2GBCMRSMYIbV4GATCVdWHBHz0a70rBpiutsIiTO3omYwy+AS8KWmRUWUXBnHg/HBFarfID6SwT/BN2Uh1AaqBU6POHMDf5VFvdHLMkEA0X/GbR4KSElb7/mAIe3NJc404HAZdtoLdGK24WVFWgUX7ti9TCG0HmaG0rG4szJ6l9aocnhn/XO5yfX7BGMrb70XKYH/uCRU/DSQ3lxpq9vAXtmCgmKjq8U8dsoIv0iIaCmOwonVcUjmxol3W9dAOOJ38s3tx32MPUuEB1so1l9HhVEQ=/df1XvNoTjYHb/9o/';
+
+// Form submission
+appSubmissionForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!auth.currentUser) {
+        alert('Please sign in to submit an app.');
+        return;
+    }
+
+    // Validate form
+    const thumbnailFile = document.getElementById('thumbnailInput').files[0];
+    const apkFile = document.getElementById('apkInput').files[0];
+    
+    if (!thumbnailFile) {
+        alert('Please upload a thumbnail image.');
+        return;
+    }
+
+    if (!apkFile) {
+        alert('Please upload an APK file.');
+        return;
+    }
+
+    // Disable submit button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+        const userId = auth.currentUser.uid;
+        const userEmail = auth.currentUser.email;
+        const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        
+        // 1. Upload thumbnail
+        const thumbnailRef = storage.ref(`submissions/${userId}/${Date.now()}_${thumbnailFile.name}`);
+        const thumbnailSnapshot = await thumbnailRef.put(thumbnailFile);
+        const thumbnailUrl = await thumbnailSnapshot.ref.getDownloadURL();
+        
+        // 2. Upload APK
+        const apkRef = storage.ref(`submissions/${userId}/${Date.now()}_${apkFile.name}`);
+        const apkSnapshot = await apkRef.put(apkFile);
+        const apkUrl = await apkSnapshot.ref.getDownloadURL();
+        
+        // 3. Create submission document
+        const submissionData = {
+            title: document.getElementById('appTitle').value,
+            description: document.getElementById('appDescription').value,
+            publisher: document.getElementById('publisherName').value,
+            contactEmail: document.getElementById('contactEmail').value,
+            thumbnailUrl: thumbnailUrl,
+            apkUrl: apkUrl,
+            userId: userId,
+            userEmail: userEmail,
+            status: 'pending',
+            createdAt: timestamp,
+            updatedAt: timestamp
         };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const storage = firebase.storage();
-
-        // DOM Elements
-        const authButton = document.getElementById('authButton');
-        const userAvatar = document.getElementById('userAvatar');
-        const userDropdown = document.getElementById('userDropdown');
-        const notificationBell = document.getElementById('notificationBell');
-        const notificationBadge = document.getElementById('notificationBadge');
-        const notificationPopup = document.getElementById('notificationPopup');
-        const notificationList = document.getElementById('notificationList');
-        const signOutBtn = document.getElementById('signOutBtn');
         
-        // Form Elements
-        const appSubmissionForm = document.getElementById('appSubmissionForm');
-        const appTitle = document.getElementById('appTitle');
-        const appDescription = document.getElementById('appDescription');
-        const publisherName = document.getElementById('publisherName');
-        const contactEmail = document.getElementById('contactEmail');
-        const thumbnailUpload = document.getElementById('thumbnailUpload');
-        const thumbnailInput = document.getElementById('thumbnailInput');
-        const thumbnailFileName = document.getElementById('thumbnailFileName');
-        const apkUpload = document.getElementById('apkUpload');
-        const apkInput = document.getElementById('apkInput');
-        const apkFileName = document.getElementById('apkFileName');
-        const charCount = document.getElementById('charCount');
-        const submitBtn = document.getElementById('submitBtn');
+        // 4. Save to Firestore
+        await db.collection('submissions').add(submissionData);
         
-        // Modal Elements
-        const successModal = document.getElementById('successModal');
-        const modalEmail = document.getElementById('modalEmail');
-        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        // 5. Send to Discord webhook (with error handling)
+        try {
+            const embed = {
+                title: 'New App Submission',
+                color: 0x6A1B9A,
+                fields: [
+                    { name: 'App Title', value: submissionData.title },
+                    { name: 'Publisher', value: submissionData.publisher },
+                    { name: 'Description', value: submissionData.description },
+                    { name: 'Contact Email', value: submissionData.contactEmail },
+                    { name: 'Submitted By', value: userEmail },
+                    { name: 'Thumbnail', value: `[View](${thumbnailUrl})` },
+                    { name: 'APK', value: `[Download](${apkUrl})` }
+                ],
+                timestamp: new Date().toISOString()
+            };
 
-        // Discord Webhook URL (replace with your actual webhook URL)
-        const DISCORD_WEBHOOK_URL = 'https://l.webhook.party/hook/2qAuSmcvDcC04P97sfMdLbW9SQrbO9a9wKMfwqrV68LdbABBC%2BwpOrb6g5MWbNRR%2BgS8dcHbSIRbNWfouABeWRwLnowFKNoxJ8Pvag2Ztx%2Bo%2FstIkt%2B2GBCMRSMYIbV4GATCVdWHBHz0a70rBpiutsIiTO3omYwy%2BAS8KWmRUWUXBnHg%2FHBFarfID6SwT%2FBN2Uh1AaqBU6POHMDf5VFvdHLMkEA0X%2FGbR4KSElb7%2FmAIe3NJc404HAZdtoLdGK24WVFWgUX7ti9TCG0HmaG0rG4szJ6l9aocnhn%2FXO5yfX7BGMrb70XKYH%2FuCRU%2FDSQ3lxpq9vAXtmCgmKjq8U8dsoIv0iIaCmOwonVcUjmxol3W9dAOOJ38s3tx32MPUuEB1so1l9HhVEQ%3D/df1XvNoTjYHb%2F9o%2F';
+            const response = await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ embeds: [embed] })
+            });
 
-        // Track uploaded files
-        let thumbnailFile = null;
-        let apkFile = null;
-
-        // Character count for description
-        appDescription.addEventListener('input', () => {
-            charCount.textContent = appDescription.value.length;
-        });
-
-        // File upload handlers
-        thumbnailUpload.addEventListener('click', () => {
-            thumbnailInput.click();
-        });
-
-        thumbnailInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                thumbnailFile = e.target.files[0];
-                thumbnailFileName.textContent = thumbnailFile.name;
-                thumbnailFileName.style.display = 'block';
+            if (!response.ok) {
+                console.error('Discord webhook error:', response.status);
             }
-        });
-
-        apkUpload.addEventListener('click', () => {
-            apkInput.click();
-        });
-
-        apkInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                apkFile = e.target.files[0];
-                apkFileName.textContent = apkFile.name;
-                apkFileName.style.display = 'block';
-            }
-        });
-
-        // Form submission
-        appSubmissionForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (!auth.currentUser) {
-                alert('Please sign in to submit an app.');
-                return;
-            }
-
-            // Validate form
-            if (!thumbnailFile) {
-                alert('Please upload a thumbnail image.');
-                return;
-            }
-
-            if (!apkFile) {
-                alert('Please upload an APK file.');
-                return;
-            }
-
-            // Disable submit button
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-
-            try {
-                const userId = auth.currentUser.uid;
-                const userEmail = auth.currentUser.email;
-                const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-                
-                // Upload thumbnail to Firebase Storage
-                const thumbnailRef = storage.ref(`submissions/${userId}/${timestamp}/thumbnail_${thumbnailFile.name}`);
-                const thumbnailSnapshot = await thumbnailRef.put(thumbnailFile);
-                const thumbnailUrl = await thumbnailSnapshot.ref.getDownloadURL();
-                
-                // Upload APK to Firebase Storage
-                const apkRef = storage.ref(`submissions/${userId}/${timestamp}/app_${apkFile.name}`);
-                const apkSnapshot = await apkRef.put(apkFile);
-                const apkUrl = await apkSnapshot.ref.getDownloadURL();
-                
-                // Create submission document
-                const submissionData = {
-                    title: appTitle.value,
-                    description: appDescription.value,
-                    publisher: publisherName.value,
-                    contactEmail: contactEmail.value,
-                    thumbnailUrl: thumbnailUrl,
-                    apkUrl: apkUrl,
-                    userId: userId,
-                    userEmail: userEmail,
-                    status: 'pending',
-                    createdAt: timestamp,
-                    updatedAt: timestamp
-                };
-                
-                // Save to Firestore
-                await db.collection('submissions').add(submissionData);
-                
-                // Send to Discord webhook
-                await sendToDiscordWebhook(submissionData);
-                
-                // Show success modal
-                modalEmail.textContent = userEmail;
-                successModal.classList.add('show');
-                
-                // Reset form
-                appSubmissionForm.reset();
-                thumbnailFileName.style.display = 'none';
-                apkFileName.style.display = 'none';
-                thumbnailFile = null;
-                apkFile = null;
-                charCount.textContent = '0';
-            } catch (error) {
-                console.error('Error submitting app:', error);
-                alert('Failed to submit app. Please try again.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send for Approval';
-            }
-        });
-
-        // Send data to Discord webhook
-        async function sendToDiscordWebhook(submissionData) {
-            try {
-                const embed = {
-                    title: 'New App Submission',
-                    color: 0x6A1B9A,
-                    fields: [
-                        {
-                            name: 'App Title',
-                            value: submissionData.title,
-                            inline: true
-                        },
-                        {
-                            name: 'Publisher',
-                            value: submissionData.publisher,
-                            inline: true
-                        },
-                        {
-                            name: 'Description',
-                            value: submissionData.description
-                        },
-                        {
-                            name: 'Contact Email',
-                            value: submissionData.contactEmail
-                        },
-                        {
-                            name: 'Submitted By',
-                            value: `${submissionData.userEmail} (UID: ${submissionData.userId})`
-                        },
-                        {
-                            name: 'Thumbnail',
-                            value: '[View Thumbnail](' + submissionData.thumbnailUrl + ')'
-                        },
-                        {
-                            name: 'APK File',
-                            value: '[Download APK](' + submissionData.apkUrl + ')'
-                        }
-                    ],
-                    timestamp: new Date().toISOString()
-                };
-
-                const response = await fetch(DISCORD_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        embeds: [embed]
-                    })
-                });
-
-                if (!response.ok) {
-                    console.error('Discord webhook error:', await response.text());
-                }
-            } catch (error) {
-                console.error('Error sending to Discord:', error);
-            }
+        } catch (webhookError) {
+            console.error('Webhook failed (non-critical):', webhookError);
         }
+        
+        // 6. Show success modal
+        modalEmail.textContent = userEmail;
+        successModal.classList.add('show');
+        
+        // 7. Reset form
+        appSubmissionForm.reset();
+        document.getElementById('thumbnailFileName').style.display = 'none';
+        document.getElementById('apkFileName').style.display = 'none';
+        document.getElementById('charCount').textContent = '0';
+        
+    } catch (error) {
+        console.error('Submission error:', error);
+        alert('Submission failed. Please check console for details.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send for Approval';
+    }
+});
 
-        // Modal close button
-        modalCloseBtn.addEventListener('click', () => {
-            successModal.classList.remove('show');
-        });
+// Modal close button
+modalCloseBtn.addEventListener('click', () => {
+    successModal.classList.remove('show');
+});
 
-        // Load notifications
-        function loadNotifications() {
-            if (!auth.currentUser) return;
+// Auth state listener
+auth.onAuthStateChanged(user => {
+    if (user) {
+        authButton.style.display = 'none';
+        userAvatar.src = user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=6A1B9A&color=FFFFFF&bold=true`;
+        userAvatar.style.display = 'block';
+        
+        // Pre-fill email if available
+        document.getElementById('contactEmail').value = user.email || '';
+    } else {
+        authButton.style.display = 'block';
+        userAvatar.style.display = 'none';
+        window.location.href = '/login'; // Redirect if not logged in
+    }
+});
 
-            db.collection('notifications')
-                .where('userId', '==', auth.currentUser.uid)
-                .orderBy('createdAt', 'desc')
-                .limit(10)
-                .get()
-                .then(snapshot => {
-                    notificationList.innerHTML = '';
-                    
-                    if (snapshot.empty) {
-                        notificationList.innerHTML = '<li class="notification-item">No notifications</li>';
-                        notificationBadge.style.display = 'none';
-                        return;
-                    }
-
-                    let unreadCount = 0;
-                    snapshot.forEach(doc => {
-                        const notification = doc.data();
-                        const item = document.createElement('li');
-                        item.className = `notification-item ${!notification.read ? 'unread' : ''}`;
-                        item.innerHTML = `
-                            ${notification.message}
-                            <small>${new Date(notification.createdAt?.toDate()).toLocaleString()}</small>
-                        `;
-
-                        if (!notification.read) unreadCount++;
-                        notificationList.appendChild(item);
-                    });
-
-                    notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
-                    notificationBadge.style.display = unreadCount > 0 ? 'block' : 'none';
-                });
-        }
-
-        // Auth state listener
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                authButton.style.display = 'none';
-                userAvatar.src = user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=6A1B9A&color=FFFFFF&bold=true`;
-                userAvatar.style.display = 'block';
-                loadNotifications();
-                
-                // Pre-fill email if available
-                contactEmail.value = user.email || '';
-            } else {
-                authButton.style.display = 'block';
-                userAvatar.style.display = 'none';
-                notificationBadge.style.display = 'none';
-                window.location.href = '/login'; // Redirect if not logged in
-            }
-        });
-
+// Other event listeners (notification, dropdown, etc.) remain the same
         // Event listeners
         notificationBell.addEventListener('click', () => {
             notificationPopup.classList.toggle('show');
