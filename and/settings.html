@@ -315,10 +315,11 @@
             </div>
         </div>
     </div>
-    <script src="https://webadb.dev/webadb.js"></script>
-    
- <script>
-    // Firebase Configuration
+    <!-- ✅ Load WebADB FIRST -->
+<script src="https://unpkg.com/webadb.js@1.0.4/dist/webadb.min.js"></script>
+
+<!-- ✅ Your full script starts here -->
+<script>
     const firebaseConfig = {
         apiKey: "AIzaSyBMUi291fwb-HSxlGPQMxdEJGUTiOOvFBs",
         authDomain: "nexaverse-eeb07.firebaseapp.com",
@@ -330,8 +331,8 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // ADB + DOM
     let adbClient = null;
+
     const authButton = document.getElementById('authButton');
     const userAvatar = document.getElementById('userAvatar');
     const statusIndicator = document.getElementById('statusIndicator');
@@ -341,10 +342,9 @@
     const sendAdbCommandBtn = document.getElementById('sendAdbCommandBtn');
     const clearTerminalBtn = document.getElementById('clearTerminalBtn');
     const connectUsbBtn = document.getElementById('connectUsbBtn');
-    const connectWifiBtn = document.getElementById('connectWifiBtn'); // not used but retained
+    const connectWifiBtn = document.getElementById('connectWifiBtn'); // placeholder
     const ipInput = document.getElementById('ipInput');
 
-    // Terminal
     function appendToTerminal(text) {
         terminalOutput.innerText += '\n' + text;
         terminalOutput.scrollTop = terminalOutput.scrollHeight;
@@ -361,13 +361,13 @@
             connected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
     }
 
-    // USB Connect
+    // ✅ WebADB USB Connect
     async function connectUSB() {
         try {
             appendToTerminal('$ Requesting USB device...');
             const device = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x2833 }] });
 
-            const adb = new WebADB.WebADB();
+            const adb = new WebADB();
             await adb.connect(device);
 
             adbClient = adb.getClient();
@@ -384,6 +384,7 @@
         }
     }
 
+    // ✅ Send ADB command
     async function executeAdbCommand(command) {
         if (!adbClient) {
             appendToTerminal('$ Not connected to device');
@@ -405,7 +406,6 @@
     async function applyDisplaySettings() {
         const resolution = document.getElementById('resolutionSelect').value;
         const refreshRate = document.getElementById('refreshRateSelect').value;
-
         await executeAdbCommand(`setprop debug.oculus.textureSize ${resolution}`);
         await executeAdbCommand(`setprop debug.oculus.refreshRate ${refreshRate}`);
         appendToTerminal('$ Display settings applied');
@@ -414,13 +414,11 @@
     async function applyPerformanceSettings() {
         const cpu = document.getElementById('cpuLevelSelect').value;
         const gpu = document.getElementById('gpuLevelSelect').value;
-
         await executeAdbCommand(`setprop debug.oculus.cpuLevel ${cpu}`);
         await executeAdbCommand(`setprop debug.oculus.gpuLevel ${gpu}`);
         appendToTerminal('$ Performance settings applied');
     }
 
-    // Events
     connectUsbBtn.addEventListener('click', connectUSB);
     sendAdbCommandBtn.addEventListener('click', () => {
         const cmd = adbCommandInput.value.trim();
@@ -453,7 +451,9 @@
     });
 
     updateConnectionStatus(false);
- </script>
+        </script>
+    
+ 
     
 
 </body>
