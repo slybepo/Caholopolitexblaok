@@ -328,11 +328,11 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// ADB Client
+// ADB Client with direct USB access
 let adbClient = null;
-let adbSocket = null; // Used for WebSocket connection with adb-ts
+let usbDevice = null;
 
-// DOM Elements
+// DOM Elements (These remain the same)
 const authButton = document.getElementById('authButton');
 const userAvatar = document.getElementById('userAvatar');
 const statusIndicator = document.getElementById('statusIndicator');
@@ -340,12 +340,12 @@ const statusText = document.getElementById('statusText');
 const terminalOutput = document.getElementById('terminalOutput');
 const adbCommandInput = document.getElementById('adbCommandInput');
 const sendAdbCommandBtn = document.getElementById('sendAdbCommandBtn');
-const clearTerminalBtn = document = document.getElementById('clearTerminalBtn');
+const clearTerminalBtn = document.getElementById('clearTerminalBtn');
 const connectUsbBtn = document.getElementById('connectUsbBtn');
 const connectWifiBtn = document.getElementById('connectWifiBtn');
 const ipInput = document.getElementById('ipInput');
 
-// Terminal Functions
+// Terminal Functions (These remain the same)
 function appendToTerminal(text) {
     terminalOutput.innerHTML += '\n' + text;
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
@@ -362,25 +362,7 @@ function updateConnectionStatus(connected, message = '') {
         connected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
 }
 
-// ADB Connection using adb-ts (compatible with your included library)
-
-
-// Execute ADB Command
-async function executeAdbCommand(command) {
-    if (!adbClient) {
-        appendToTerminal('$ Error: Not connected to device');
-        return;
-    }
-
-    try {
-        appendToTerminal('$ ' + command);
-        const output = await adbClient.shell(command); // Use shell for commands, execOut might be for specific binaries
-        appendToTerminal(output);
-    } catch (err) {
-        appendToTerminal('$ Error executing command: ' + err.message);
-        if (err.message.includes('closed') || err.message.includes('disconnected')) {
-            updateConnectionStatus(false, 'Disconnected');
-            appendToTerminal('$ Device connect// New USB Connection Handler
+// New USB Connection Handler
 async function connectUSB() {
     try {
         appendToTerminal('$ Requesting USB access...');
@@ -393,6 +375,9 @@ async function connectUSB() {
         appendToTerminal('$ Found device: ' + usbDevice.productName);
         
         // 2. Initialize WebADB
+        // IMPORTANT: The 'WebADB' object must be defined by a loaded library.
+        // If you are getting "WebADB not defined", you need to include the
+        // correct WebADB library script in your HTML.
         const adb = new WebADB.WebADB();
         await adb.connect(usbDevice);
         
@@ -416,10 +401,13 @@ async function connectUSB() {
     }
 }
 
-// WiFi Connection (unchanged)
+// WiFi Connection (unchanged from your provided snippet)
 async function connectWifi(ip) {
     try {
         appendToTerminal(`$ Connecting to ${ip}:5555...`);
+        // IMPORTANT: The 'WebADB' object must be defined by a loaded library.
+        // If you are getting "WebADB not defined", you need to include the
+        // correct WebADB library script in your HTML.
         adbClient = new WebADB.Client({
             host: ip,
             port: 5555
@@ -435,7 +423,7 @@ async function connectWifi(ip) {
     }
 }
 
-// Connection monitoring
+// Connection monitoring (from your provided snippet)
 async function monitorConnection() {
     try {
         while (true) {
@@ -444,14 +432,38 @@ async function monitorConnection() {
         }
     } catch (error) {
         appendToTerminal('$ Device disconnected');
-        handleDisconnection();
+        handleDisconnection(); // This function needs to be defined
     }
 }
 
-// Update your button listeners:
+// Basic handleDisconnection function (added to ensure code compiles)
+function handleDisconnection() {
+    updateConnectionStatus(false, 'Disconnected');
+    appendToTerminal('$ Connection to device lost.');
+    adbClient = null; // Clear the client
+    usbDevice = null; // Clear the USB device
+}
 
+// Execute ADB Command (modified to use the new adbClient)
+async function executeAdbCommand(command) {
+    if (!adbClient) {
+        appendToTerminal('$ Error: Not connected to device');
+        return;
+    }
 
-// Apply Settings
+    try {
+        appendToTerminal('$ ' + command);
+        const output = await adbClient.execOut(command); // Using execOut as per your new snippet's pattern
+        appendToTerminal(output);
+    } catch (err) {
+        appendToTerminal('$ Error: ' + err.message);
+        if (err.message.includes('closed') || err.message.includes('disconnected')) {
+            handleDisconnection(); // Use the new handler
+        }
+    }
+}
+
+// Apply Settings (modified to use the new adbClient and executeAdbCommand)
 async function applyDisplaySettings() {
     const resolution = document.getElementById('resolutionSelect').value;
     const refreshRate = document.getElementById('refreshRateSelect').value;
@@ -461,7 +473,7 @@ async function applyDisplaySettings() {
         await executeAdbCommand(`setprop debug.oculus.refreshRate ${refreshRate}`);
         appendToTerminal('$ Display settings applied');
     } catch (err) {
-        appendToTerminal('$ Failed to apply display settings');
+        appendToTerminal('$ Failed to apply settings');
     }
 }
 
@@ -474,16 +486,15 @@ async function applyPerformanceSettings() {
         await executeAdbCommand(`setprop debug.oculus.gpuLevel ${gpuLevel}`);
         appendToTerminal('$ Performance settings applied');
     } catch (err) {
-        appendToTerminal('$ Failed to apply performance settings');
+        appendToTerminal('$ Failed to apply settings');
     }
 }
 
-// Event Listeners
-connectUsbBtn.addEventListener('click', () => connectADB('usb'));
-connectWifiBtn.addEventListener('click', () => {
-    const ip = ipInput.value.trim();
-    if (ip) connectADB('wifi', ip);
-    else appendToTerminal('$ Please enter an IP address for WiFi connection.');
+// Event Listeners (updated as per your provided snippet, and for other functions)
+document.getElementById('connectUsbBtn').addEventListener('click', connectUSB);
+document.getElementById('connectWifiBtn').addEventListener('click', () => {
+    const ip = document.getElementById('ipInput').value.trim();
+    if (ip) connectWifi(ip);
 });
 sendAdbCommandBtn.addEventListener('click', () => {
     const cmd = adbCommandInput.value.trim();
@@ -497,7 +508,8 @@ clearTerminalBtn.addEventListener('click', clearTerminal);
 document.getElementById('applyDisplayBtn').addEventListener('click', applyDisplaySettings);
 document.getElementById('applyPerformanceBtn').addEventListener('click', applyPerformanceSettings);
 
-// Auth State
+
+// Auth State (This remains the same)
 auth.onAuthStateChanged(user => {
     if (user) {
         authButton.style.display = 'none';
@@ -510,14 +522,13 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-// Init
+// Init (This remains the same)
 authButton.addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider);
 });
 
 updateConnectionStatus(false);
-
     </script>
 
 </body>
