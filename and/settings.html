@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>probe-app | Quest Developer Tools</title>
+    <title>probe-app | Quest adb Tools</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/adb-ts@1.3.2/dist/adb.min.js"></script>
@@ -330,7 +330,7 @@ const auth = firebase.auth();
 
 // ADB Client
 let adbClient = null;
-let adbSocket = null;
+let adbSocket = null; // Used for WebSocket connection with adb-ts
 
 // DOM Elements
 const authButton = document.getElementById('authButton');
@@ -340,7 +340,7 @@ const statusText = document.getElementById('statusText');
 const terminalOutput = document.getElementById('terminalOutput');
 const adbCommandInput = document.getElementById('adbCommandInput');
 const sendAdbCommandBtn = document.getElementById('sendAdbCommandBtn');
-const clearTerminalBtn = document.getElementById('clearTerminalBtn');
+const clearTerminalBtn = document = document.getElementById('clearTerminalBtn');
 const connectUsbBtn = document.getElementById('connectUsbBtn');
 const connectWifiBtn = document.getElementById('connectWifiBtn');
 const ipInput = document.getElementById('ipInput');
@@ -362,27 +362,28 @@ function updateConnectionStatus(connected, message = '') {
         connected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
 }
 
-// ADB Connection
+// ADB Connection using adb-ts (compatible with your included library)
 async function connectADB(type, address = null) {
     try {
         appendToTerminal(`$ Attempting ${type} connection...`);
         
         if (adbSocket) {
-            adbSocket.close();
+            adbSocket.close(); // Close existing socket if open
         }
 
         const socketUrl = type === 'usb' 
-            ? 'ws://127.0.0.1:8080/adb'  // Local proxy like SideQuest uses
-            : `ws://${address}:5555`;     // Direct WiFi connection
+            ? 'ws://127.0.0.1:8080/adb'  // For USB, typically requires a local ADB server/proxy (like SideQuest)
+            : `ws://${address}:5555`;     // For WiFi, connects directly to device's ADB port
 
         adbSocket = new WebSocket(socketUrl);
 
         adbSocket.onopen = async () => {
-            // Fix: Changed 'ADB.Client' to 'Adb.Client' based on common library exports.
+            // Initialize Adb.Client with the WebSocket
             adbClient = new Adb.Client(adbSocket); 
             try {
                 const devices = await adbClient.listDevices();
                 if (devices.length > 0) {
+                    // Get device model
                     const model = await adbClient.getProperty('ro.product.model');
                     updateConnectionStatus(true, `Connected: ${model}`);
                     appendToTerminal(`$ Successfully connected to ${model}`);
@@ -390,15 +391,15 @@ async function connectADB(type, address = null) {
                     throw new Error('No devices found');
                 }
             } catch (err) {
-                appendToTerminal('$ Connection error: ' + err.message);
+                appendToTerminal('$ Connection verification failed: ' + err.message);
                 updateConnectionStatus(false);
             }
         };
 
         adbSocket.onerror = (err) => {
-            appendToTerminal(`$ ${type.toUpperCase()} connection failed`);
+            appendToTerminal(`$ ${type.toUpperCase()} connection failed: ${err.message}`);
             if (type === 'usb') {
-                appendToTerminal('$ Make sure SideQuest or ADB server is running on your phone');
+                appendToTerminal('$ Tip for USB: Ensure SideQuest or another ADB server is running on your computer, bridging the USB connection.');
             }
             updateConnectionStatus(false);
         };
@@ -406,10 +407,11 @@ async function connectADB(type, address = null) {
         adbSocket.onclose = () => {
             appendToTerminal('$ Connection closed');
             updateConnectionStatus(false);
+            adbClient = null; // Clear client on close
         };
 
     } catch (err) {
-        appendToTerminal('$ Connection error: ' + err.message);
+        appendToTerminal('$ Connection attempt error: ' + err.message);
         updateConnectionStatus(false);
     }
 }
@@ -423,12 +425,13 @@ async function executeAdbCommand(command) {
 
     try {
         appendToTerminal('$ ' + command);
-        const output = await adbClient.shell(command);
+        const output = await adbClient.shell(command); // Use shell for commands, execOut might be for specific binaries
         appendToTerminal(output);
     } catch (err) {
-        appendToTerminal('$ Error: ' + err.message);
-        if (err.message.includes('closed')) {
-            updateConnectionStatus(false);
+        appendToTerminal('$ Error executing command: ' + err.message);
+        if (err.message.includes('closed') || err.message.includes('disconnected')) {
+            updateConnectionStatus(false, 'Disconnected');
+            appendToTerminal('$ Device connection lost during command execution.');
         }
     }
 }
@@ -443,7 +446,7 @@ async function applyDisplaySettings() {
         await executeAdbCommand(`setprop debug.oculus.refreshRate ${refreshRate}`);
         appendToTerminal('$ Display settings applied');
     } catch (err) {
-        appendToTerminal('$ Failed to apply settings');
+        appendToTerminal('$ Failed to apply display settings');
     }
 }
 
@@ -456,13 +459,17 @@ async function applyPerformanceSettings() {
         await executeAdbCommand(`setprop debug.oculus.gpuLevel ${gpuLevel}`);
         appendToTerminal('$ Performance settings applied');
     } catch (err) {
-        appendToTerminal('$ Failed to apply settings');
+        appendToTerminal('$ Failed to apply performance settings');
     }
 }
 
 // Event Listeners
 connectUsbBtn.addEventListener('click', () => connectADB('usb'));
-connectWifiBtn.addEventListener('click', () => connectADB('wifi', ipInput.value));
+connectWifiBtn.addEventListener('click', () => {
+    const ip = ipInput.value.trim();
+    if (ip) connectADB('wifi', ip);
+    else appendToTerminal('$ Please enter an IP address for WiFi connection.');
+});
 sendAdbCommandBtn.addEventListener('click', () => {
     const cmd = adbCommandInput.value.trim();
     if (cmd) executeAdbCommand(cmd);
@@ -495,7 +502,6 @@ authButton.addEventListener('click', () => {
 });
 
 updateConnectionStatus(false);
-        
 
     </script>
 
