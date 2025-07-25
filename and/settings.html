@@ -315,201 +315,188 @@
     </div>
 <script>
         // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBMUi291fwb-HSxlGPQMxdEJGUTiOOvFBs",
-            authDomain: "nexaverse-eeb07.firebaseapp.com",
-            projectId: "nexaverse-eeb07",
-            storageBucket: "nexaverse-eeb07.appspot.com",
-            messagingSenderId: "686342300627",
-            appId: "1:686342300627:web:90522d8f1129fb00b08526",
+const firebaseConfig = {
+    apiKey: "AIzaSyBMUi291fwb-HSxlGPQMxdEJGUTiOOvFBs",
+    authDomain: "nexaverse-eeb07.firebaseapp.com",
+    projectId: "nexaverse-eeb07",
+    storageBucket: "nexaverse-eeb07.appspot.com",
+    messagingSenderId: "686342300627",
+    appId: "1:686342300627:web:90522d8f1129fb00b08526",
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+// ADB Client
+let adbClient = null;
+let adbSocket = null;
+
+// DOM Elements
+const authButton = document.getElementById('authButton');
+const userAvatar = document.getElementById('userAvatar');
+const statusIndicator = document.getElementById('statusIndicator');
+const statusText = document.getElementById('statusText');
+const terminalOutput = document.getElementById('terminalOutput');
+const adbCommandInput = document.getElementById('adbCommandInput');
+const sendAdbCommandBtn = document.getElementById('sendAdbCommandBtn');
+const clearTerminalBtn = document.getElementById('clearTerminalBtn');
+const connectUsbBtn = document.getElementById('connectUsbBtn');
+const connectWifiBtn = document.getElementById('connectWifiBtn');
+const ipInput = document.getElementById('ipInput');
+
+// Terminal Functions
+function appendToTerminal(text) {
+    terminalOutput.innerHTML += '\n' + text;
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+}
+
+function clearTerminal() {
+    terminalOutput.innerHTML = '$ Terminal cleared';
+}
+
+function updateConnectionStatus(connected, message = '') {
+    statusIndicator.classList.toggle('connected', connected);
+    statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
+    document.getElementById('connectionStatus').style.backgroundColor = 
+        connected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
+}
+
+// ADB Connection
+async function connectADB(type, address = null) {
+    try {
+        appendToTerminal(`$ Attempting ${type} connection...`);
+        
+        if (adbSocket) {
+            adbSocket.close();
+        }
+
+        const socketUrl = type === 'usb' 
+            ? 'ws://127.0.0.1:8080/adb'  // Local proxy like SideQuest uses
+            : `ws://${address}:5555`;     // Direct WiFi connection
+
+        adbSocket = new WebSocket(socketUrl);
+
+        adbSocket.onopen = async () => {
+            // Fix: Changed 'ADB.Client' to 'Adb.Client' based on common library exports.
+            adbClient = new Adb.Client(adbSocket); 
+            try {
+                const devices = await adbClient.listDevices();
+                if (devices.length > 0) {
+                    const model = await adbClient.getProperty('ro.product.model');
+                    updateConnectionStatus(true, `Connected: ${model}`);
+                    appendToTerminal(`$ Successfully connected to ${model}`);
+                } else {
+                    throw new Error('No devices found');
+                }
+            } catch (err) {
+                appendToTerminal('$ Connection error: ' + err.message);
+                updateConnectionStatus(false);
+            }
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        // WebADB Initialization
-        const adb = new WebADB();
-        let device = null;
-        let adbClient = null;
-
-        // DOM Elements
-        const authButton = document.getElementById('authButton');
-        const userAvatar = document.getElementById('userAvatar');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const statusText = document.getElementById('statusText');
-        const terminalOutput = document.getElementById('terminalOutput');
-        const adbCommandInput = document.getElementById('adbCommandInput');
-        const sendAdbCommandBtn = document.getElementById('sendAdbCommandBtn');
-        const clearTerminalBtn = document.getElementById('clearTerminalBtn');
-        const connectUsbBtn = document.getElementById('connectUsbBtn');
-        const connectWifiBtn = document.getElementById('connectWifiBtn');
-        const ipInput = document.getElementById('ipInput');
-
-        // Terminal Functions
-        function appendToTerminal(text) {
-            terminalOutput.innerHTML += '\n' + text;
-            terminalOutput.scrollTop = terminalOutput.scrollHeight;
-        }
-
-        function clearTerminal() {
-            terminalOutput.innerHTML = '$ Terminal cleared';
-        }
-
-        function updateConnectionStatus(connected, message = '') {
-            statusIndicator.classList.toggle('connected', connected);
-            statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
-            document.getElementById('connectionStatus').style.backgroundColor = 
-                connected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
-        }
-
-        // ADB Connection
-        async function connectUSB() {
-            try {
-                appendToTerminal('$ Requesting USB access...');
-                
-                // Request USB device
-                device = await navigator.usb.requestDevice({
-                    filters: [{ vendorId: 0x2833 }] // Oculus vendor ID
-                });
-                
-                appendToTerminal('$ Found device: ' + device.productName);
-                
-                // Initialize ADB
-                await adb.connect(device);
-                adbClient = await adb.getClient(device);
-                
-                // Verify connection
-                const model = await adbClient.execOut('getprop ro.product.model');
-                updateConnectionStatus(true, `Connected: ${model.trim()}`);
-                appendToTerminal(`$ Device ready: ${model.trim()}`);
-                
-                // Start connection monitoring
-                monitorConnection();
-                
-            } catch (error) {
-                appendToTerminal('$ USB Error: ' + error.message);
-                updateConnectionStatus(false);
+        adbSocket.onerror = (err) => {
+            appendToTerminal(`$ ${type.toUpperCase()} connection failed`);
+            if (type === 'usb') {
+                appendToTerminal('$ Make sure SideQuest or ADB server is running on your phone');
             }
-        }
+            updateConnectionStatus(false);
+        };
 
-        async function connectWiFi(ip) {
-            try {
-                appendToTerminal(`$ Connecting to ${ip}...`);
-                
-                // This would require a WebSocket-to-ADB proxy server
-                appendToTerminal('$ WiFi ADB requires a proxy server (not implemented)');
-                appendToTerminal('$ Use USB connection instead');
-                
-            } catch (error) {
-                appendToTerminal('$ WiFi Error: ' + error.message);
-                updateConnectionStatus(false);
-            }
-        }
+        adbSocket.onclose = () => {
+            appendToTerminal('$ Connection closed');
+            updateConnectionStatus(false);
+        };
 
-        // Monitor connection status
-        async function monitorConnection() {
-            try {
-                while (device && adbClient) {
-                    await adbClient.execOut('echo connection-check');
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                }
-            } catch (error) {
-                appendToTerminal('$ Device disconnected');
-                handleDisconnection();
-            }
-        }
+    } catch (err) {
+        appendToTerminal('$ Connection error: ' + err.message);
+        updateConnectionStatus(false);
+    }
+}
 
-        function handleDisconnection() {
-            device = null;
-            adbClient = null;
+// Execute ADB Command
+async function executeAdbCommand(command) {
+    if (!adbClient) {
+        appendToTerminal('$ Error: Not connected to device');
+        return;
+    }
+
+    try {
+        appendToTerminal('$ ' + command);
+        const output = await adbClient.shell(command);
+        appendToTerminal(output);
+    } catch (err) {
+        appendToTerminal('$ Error: ' + err.message);
+        if (err.message.includes('closed')) {
             updateConnectionStatus(false);
         }
+    }
+}
 
-        // Execute ADB Command
-        async function executeAdbCommand(command) {
-            if (!adbClient) {
-                appendToTerminal('$ Error: No device connected');
-                return;
-            }
+// Apply Settings
+async function applyDisplaySettings() {
+    const resolution = document.getElementById('resolutionSelect').value;
+    const refreshRate = document.getElementById('refreshRateSelect').value;
+    
+    try {
+        await executeAdbCommand(`setprop debug.oculus.textureSize ${resolution}`);
+        await executeAdbCommand(`setprop debug.oculus.refreshRate ${refreshRate}`);
+        appendToTerminal('$ Display settings applied');
+    } catch (err) {
+        appendToTerminal('$ Failed to apply settings');
+    }
+}
 
-            try {
-                appendToTerminal('$ ' + command);
-                const output = await adbClient.execOut(command);
-                if (output.trim()) {
-                    appendToTerminal(output);
-                }
-            } catch (error) {
-                appendToTerminal('$ Error: ' + error.message);
-                if (error.message.includes('disconnected')) {
-                    handleDisconnection();
-                }
-            }
-        }
+async function applyPerformanceSettings() {
+    const cpuLevel = document.getElementById('cpuLevelSelect').value;
+    const gpuLevel = document.getElementById('gpuLevelSelect').value;
+    
+    try {
+        await executeAdbCommand(`setprop debug.oculus.cpuLevel ${cpuLevel}`);
+        await executeAdbCommand(`setprop debug.oculus.gpuLevel ${gpuLevel}`);
+        appendToTerminal('$ Performance settings applied');
+    } catch (err) {
+        appendToTerminal('$ Failed to apply settings');
+    }
+}
 
-        // Apply Settings
-        async function applyDisplaySettings() {
-            const resolution = document.getElementById('resolutionSelect').value;
-            const refreshRate = document.getElementById('refreshRateSelect').value;
-            
-            try {
-                await executeAdbCommand(`settings put system display_resolution ${resolution}`);
-                await executeAdbCommand(`settings put system display_refresh_rate ${refreshRate}`);
-                appendToTerminal('$ Display settings applied');
-            } catch (error) {
-                appendToTerminal('$ Failed to apply display settings');
-            }
-        }
+// Event Listeners
+connectUsbBtn.addEventListener('click', () => connectADB('usb'));
+connectWifiBtn.addEventListener('click', () => connectADB('wifi', ipInput.value));
+sendAdbCommandBtn.addEventListener('click', () => {
+    const cmd = adbCommandInput.value.trim();
+    if (cmd) executeAdbCommand(cmd);
+    adbCommandInput.value = '';
+});
+adbCommandInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendAdbCommandBtn.click();
+});
+clearTerminalBtn.addEventListener('click', clearTerminal);
+document.getElementById('applyDisplayBtn').addEventListener('click', applyDisplaySettings);
+document.getElementById('applyPerformanceBtn').addEventListener('click', applyPerformanceSettings);
 
-        async function applyPerformanceSettings() {
-            const cpuLevel = document.getElementById('cpuLevelSelect').value;
-            const gpuLevel = document.getElementById('gpuLevelSelect').value;
-            
-            try {
-                await executeAdbCommand(`setprop debug.oculus.cpuLevel ${cpuLevel}`);
-                await executeAdbCommand(`setprop debug.oculus.gpuLevel ${gpuLevel}`);
-                appendToTerminal('$ Performance settings applied');
-            } catch (error) {
-                appendToTerminal('$ Failed to apply performance settings');
-            }
-        }
+// Auth State
+auth.onAuthStateChanged(user => {
+    if (user) {
+        authButton.style.display = 'none';
+        userAvatar.src = user.photoURL || 
+            `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=6A1B9A&color=FFFFFF`;
+        userAvatar.style.display = 'block';
+    } else {
+        authButton.style.display = 'block';
+        userAvatar.style.display = 'none';
+    }
+});
 
-        // Event Listeners
-        connectUsbBtn.addEventListener('click', connectUSB);
-        connectWifiBtn.addEventListener('click', () => connectWiFi(ipInput.value));
-        sendAdbCommandBtn.addEventListener('click', () => {
-            const cmd = adbCommandInput.value.trim();
-            if (cmd) executeAdbCommand(cmd);
-            adbCommandInput.value = '';
-        });
-        adbCommandInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendAdbCommandBtn.click();
-        });
-        clearTerminalBtn.addEventListener('click', clearTerminal);
-        document.getElementById('applyDisplayBtn').addEventListener('click', applyDisplaySettings);
-        document.getElementById('applyPerformanceBtn').addEventListener('click', applyPerformanceSettings);
+// Init
+authButton.addEventListener('click', () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider);
+});
 
-        // Auth State
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                authButton.style.display = 'none';
-                userAvatar.src = user.photoURL || 
-                    `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=6A1B9A&color=FFFFFF`;
-                userAvatar.style.display = 'block';
-            } else {
-                authButton.style.display = 'block';
-                userAvatar.style.display = 'none';
-            }
-        });
+updateConnectionStatus(false);
+        
 
-        // Init
-        authButton.addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
-        });
-
-        updateConnectionStatus(false);
-        appendToTerminal('$ Ready to connect - plug in your Quest 2');
     </script>
 
 </body>
