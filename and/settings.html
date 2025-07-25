@@ -300,12 +300,13 @@
 
         <div class="terminal-container">
             <div class="terminal-header">
-                <div class="card-title">ADB Terminal</div>
+                <div class="card-title">Probe-App Terminal</div>
                 <button class="btn" id="clearTerminalBtn">Clear</button>
             </div>
             <div class="terminal-body" id="terminalOutput">
-                $ Welcome to probe-app developer tools
+                $ Welcome to ⚡ probe-app terminal
                 $ Connect your Quest device to begin
+                $ use the input bellow to use adb commands
             </div>
             <div class="terminal-input">
                 <input type="text" id="adbCommandInput" placeholder="Enter ADB command...">
@@ -313,223 +314,179 @@
             </div>
         </div>
     </div>
-<script>
-        // Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyBMUi291fwb-HSxlGPQMxdEJGUTiOOvFBs",
-    authDomain: "nexaverse-eeb07.firebaseapp.com",
-    projectId: "nexaverse-eeb07",
-    storageBucket: "nexaverse-eeb07.appspot.com",
-    messagingSenderId: "686342300627",
-    appId: "1:686342300627:web:90522d8f1129fb00b08526",
-};
+ <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBMUi291fwb-HSxlGPQMxdEJGUTiOOvFBs",
+        authDomain: "nexaverse-eeb07.firebaseapp.com",
+        projectId: "nexaverse-eeb07",
+        storageBucket: "nexaverse-eeb07.appspot.com",
+        messagingSenderId: "686342300627",
+        appId: "1:686342300627:web:90522d8f1129fb00b08526",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+    let adbClient = null;
+    let usbDevice = null;
 
-// ADB Client with direct USB access
-let adbClient = null;
-let usbDevice = null;
+    const authButton = document.getElementById('authButton');
+    const userAvatar = document.getElementById('userAvatar');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusText = document.getElementById('statusText');
+    const terminalOutput = document.getElementById('terminalOutput');
+    const adbCommandInput = document.getElementById('adbCommandInput');
+    const sendAdbCommandBtn = document.getElementById('sendAdbCommandBtn');
+    const clearTerminalBtn = document.getElementById('clearTerminalBtn');
+    const connectUsbBtn = document.getElementById('connectUsbBtn');
+    const connectWifiBtn = document.getElementById('connectWifiBtn');
+    const ipInput = document.getElementById('ipInput');
 
-// DOM Elements (These remain the same)
-const authButton = document.getElementById('authButton');
-const userAvatar = document.getElementById('userAvatar');
-const statusIndicator = document.getElementById('statusIndicator');
-const statusText = document.getElementById('statusText');
-const terminalOutput = document.getElementById('terminalOutput');
-const adbCommandInput = document.getElementById('adbCommandInput');
-const sendAdbCommandBtn = document.getElementById('sendAdbCommandBtn');
-const clearTerminalBtn = document.getElementById('clearTerminalBtn');
-const connectUsbBtn = document.getElementById('connectUsbBtn');
-const connectWifiBtn = document.getElementById('connectWifiBtn');
-const ipInput = document.getElementById('ipInput');
-
-// Terminal Functions (These remain the same)
-function appendToTerminal(text) {
-    terminalOutput.innerHTML += '\n' + text;
-    terminalOutput.scrollTop = terminalOutput.scrollHeight;
-}
-
-function clearTerminal() {
-    terminalOutput.innerHTML = '$ Terminal cleared';
-}
-
-function updateConnectionStatus(connected, message = '') {
-    statusIndicator.classList.toggle('connected', connected);
-    statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
-    document.getElementById('connectionStatus').style.backgroundColor = 
-        connected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
-}
-
-// New USB Connection Handler
-async function connectUSB() {
-    try {
-        appendToTerminal('$ Requesting USB access...');
-        
-        // 1. Request USB device access (Meta Quest vendor ID: 0x2833)
-        usbDevice = await navigator.usb.requestDevice({
-            filters: [{ vendorId: 0x2833 }]
-        });
-        
-        appendToTerminal('$ Found device: ' + usbDevice.productName);
-        
-        // 2. Initialize WebADB
-        // IMPORTANT: The 'WebADB' object must be defined by a loaded library.
-        // If you are getting "WebADB not defined", you need to include the
-        // correct WebADB library script in your HTML.
-        const adb = new WebADB.WebADB();
-        await adb.connect(usbDevice);
-        
-        // 3. Create ADB client
-        adbClient = adb.getClient();
-        
-        // 4. Verify connection
-        const model = await adbClient.execOut('getprop ro.product.model');
-        updateConnectionStatus(true, `Connected: ${model.trim()}`);
-        appendToTerminal(`$ Connected to ${model.trim()}`);
-        
-        // Start monitoring connection
-        monitorConnection();
-        
-    } catch (error) {
-        appendToTerminal('$ USB Error: ' + error.message);
-        if (error.message.includes('No device selected')) {
-            appendToTerminal('$ Tip: Make sure your Quest is in USB debugging mode');
-        }
-        updateConnectionStatus(false);
-    }
-}
-
-// WiFi Connection (unchanged from your provided snippet)
-async function connectWifi(ip) {
-    try {
-        appendToTerminal(`$ Connecting to ${ip}:5555...`);
-        // IMPORTANT: The 'WebADB' object must be defined by a loaded library.
-        // If you are getting "WebADB not defined", you need to include the
-        // correct WebADB library script in your HTML.
-        adbClient = new WebADB.Client({
-            host: ip,
-            port: 5555
-        });
-        
-        const model = await adbClient.execOut('getprop ro.product.model');
-        updateConnectionStatus(true, `Connected: ${model.trim()}`);
-        appendToTerminal(`$ WiFi Connected to ${model.trim()}`);
-        
-    } catch (error) {
-        appendToTerminal('$ WiFi Error: ' + error.message);
-        updateConnectionStatus(false);
-    }
-}
-
-// Connection monitoring (from your provided snippet)
-async function monitorConnection() {
-    try {
-        while (true) {
-            await adbClient.execOut('echo ping');
-            await new Promise(resolve => setTimeout(resolve, 3000));
-        }
-    } catch (error) {
-        appendToTerminal('$ Device disconnected');
-        handleDisconnection(); // This function needs to be defined
-    }
-}
-
-// Basic handleDisconnection function (added to ensure code compiles)
-function handleDisconnection() {
-    updateConnectionStatus(false, 'Disconnected');
-    appendToTerminal('$ Connection to device lost.');
-    adbClient = null; // Clear the client
-    usbDevice = null; // Clear the USB device
-}
-
-// Execute ADB Command (modified to use the new adbClient)
-async function executeAdbCommand(command) {
-    if (!adbClient) {
-        appendToTerminal('$ Error: Not connected to device');
-        return;
+    function appendToTerminal(text) {
+        terminalOutput.innerHTML += '\n' + text;
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
     }
 
-    try {
-        appendToTerminal('$ ' + command);
-        const output = await adbClient.execOut(command); // Using execOut as per your new snippet's pattern
-        appendToTerminal(output);
-    } catch (err) {
-        appendToTerminal('$ Error: ' + err.message);
-        if (err.message.includes('closed') || err.message.includes('disconnected')) {
-            handleDisconnection(); // Use the new handler
+    function clearTerminal() {
+        terminalOutput.innerHTML = '$ Terminal cleared';
+    }
+
+    function updateConnectionStatus(connected, message = '') {
+        statusIndicator.classList.toggle('connected', connected);
+        statusText.textContent = message || (connected ? 'Connected' : 'Disconnected');
+        document.getElementById('connectionStatus').style.backgroundColor = 
+            connected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
+    }
+
+    async function connectUSB() {
+        try {
+            appendToTerminal('$ Requesting USB access...');
+            usbDevice = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x2833 }] });
+            appendToTerminal('$ Found device: ' + usbDevice.productName);
+
+            const transport = await Adb.WebUSBBackend.connect(usbDevice);
+            adbClient = new Adb.Adb(transport);
+            await adbClient.connect();
+
+            const model = await execShellCommand('getprop ro.product.model');
+            updateConnectionStatus(true, `Connected: ${model}`);
+            appendToTerminal(`$ Connected to ${model}`);
+
+            monitorConnection();
+        } catch (err) {
+            appendToTerminal('$ USB Error: ' + err.message);
+            updateConnectionStatus(false);
         }
     }
-}
 
-// Apply Settings (modified to use the new adbClient and executeAdbCommand)
-async function applyDisplaySettings() {
-    const resolution = document.getElementById('resolutionSelect').value;
-    const refreshRate = document.getElementById('refreshRateSelect').value;
-    
-    try {
+    async function connectWifi(ip) {
+        try {
+            appendToTerminal(`$ Connecting to ${ip}:5555...`);
+            const socket = new WebSocket(`ws://${ip}:5555`);
+            adbClient = new Adb.Adb(await Adb.WebSocketBackend.connect(socket));
+            await adbClient.connect();
+
+            const model = await execShellCommand('getprop ro.product.model');
+            updateConnectionStatus(true, `Connected: ${model}`);
+            appendToTerminal(`$ WiFi Connected to ${model}`);
+        } catch (err) {
+            appendToTerminal('$ WiFi Error: ' + err.message);
+            updateConnectionStatus(false);
+        }
+    }
+
+    async function monitorConnection() {
+        try {
+            while (true) {
+                await execShellCommand('echo ping');
+                await new Promise(res => setTimeout(res, 3000));
+            }
+        } catch {
+            appendToTerminal('$ Device disconnected');
+            handleDisconnection();
+        }
+    }
+
+    function handleDisconnection() {
+        updateConnectionStatus(false, 'Disconnected');
+        appendToTerminal('$ Connection to device lost.');
+        adbClient = null;
+        usbDevice = null;
+    }
+
+    async function execShellCommand(command) {
+        if (!adbClient) {
+            appendToTerminal('$ Error: Not connected to device');
+            return;
+        }
+        const shellStream = await adbClient.shell(command);
+        const text = await Adb.decodeUtf8(shellStream);
+        return text.trim();
+    }
+
+    async function executeAdbCommand(command) {
+        try {
+            appendToTerminal('$ ' + command);
+            const output = await execShellCommand(command);
+            appendToTerminal(output);
+        } catch (err) {
+            appendToTerminal('$ Error: ' + err.message);
+            handleDisconnection();
+        }
+    }
+
+    async function applyDisplaySettings() {
+        const resolution = document.getElementById('resolutionSelect').value;
+        const refreshRate = document.getElementById('refreshRateSelect').value;
         await executeAdbCommand(`setprop debug.oculus.textureSize ${resolution}`);
         await executeAdbCommand(`setprop debug.oculus.refreshRate ${refreshRate}`);
         appendToTerminal('$ Display settings applied');
-    } catch (err) {
-        appendToTerminal('$ Failed to apply settings');
     }
-}
 
-async function applyPerformanceSettings() {
-    const cpuLevel = document.getElementById('cpuLevelSelect').value;
-    const gpuLevel = document.getElementById('gpuLevelSelect').value;
-    
-    try {
-        await executeAdbCommand(`setprop debug.oculus.cpuLevel ${cpuLevel}`);
-        await executeAdbCommand(`setprop debug.oculus.gpuLevel ${gpuLevel}`);
+    async function applyPerformanceSettings() {
+        const cpu = document.getElementById('cpuLevelSelect').value;
+        const gpu = document.getElementById('gpuLevelSelect').value;
+        await executeAdbCommand(`setprop debug.oculus.cpuLevel ${cpu}`);
+        await executeAdbCommand(`setprop debug.oculus.gpuLevel ${gpu}`);
         appendToTerminal('$ Performance settings applied');
-    } catch (err) {
-        appendToTerminal('$ Failed to apply settings');
     }
-}
 
-// Event Listeners (updated as per your provided snippet, and for other functions)
-document.getElementById('connectUsbBtn').addEventListener('click', connectUSB);
-document.getElementById('connectWifiBtn').addEventListener('click', () => {
-    const ip = document.getElementById('ipInput').value.trim();
-    if (ip) connectWifi(ip);
-});
-sendAdbCommandBtn.addEventListener('click', () => {
-    const cmd = adbCommandInput.value.trim();
-    if (cmd) executeAdbCommand(cmd);
-    adbCommandInput.value = '';
-});
-adbCommandInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendAdbCommandBtn.click();
-});
-clearTerminalBtn.addEventListener('click', clearTerminal);
-document.getElementById('applyDisplayBtn').addEventListener('click', applyDisplaySettings);
-document.getElementById('applyPerformanceBtn').addEventListener('click', applyPerformanceSettings);
+    connectUsbBtn.addEventListener('click', connectUSB);
+    connectWifiBtn.addEventListener('click', () => {
+        const ip = ipInput.value.trim();
+        if (ip) connectWifi(ip);
+    });
+    sendAdbCommandBtn.addEventListener('click', () => {
+        const cmd = adbCommandInput.value.trim();
+        if (cmd) executeAdbCommand(cmd);
+        adbCommandInput.value = '';
+    });
+    adbCommandInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') sendAdbCommandBtn.click();
+    });
+    clearTerminalBtn.addEventListener('click', clearTerminal);
+    document.getElementById('applyDisplayBtn').addEventListener('click', applyDisplaySettings);
+    document.getElementById('applyPerformanceBtn').addEventListener('click', applyPerformanceSettings);
 
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            authButton.style.display = 'none';
+            userAvatar.src = user.photoURL || 
+                `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=6A1B9A&color=FFFFFF`;
+            userAvatar.style.display = 'block';
+        } else {
+            authButton.style.display = 'block';
+            userAvatar.style.display = 'none';
+        }
+    });
 
-// Auth State (This remains the same)
-auth.onAuthStateChanged(user => {
-    if (user) {
-        authButton.style.display = 'none';
-        userAvatar.src = user.photoURL || 
-            `https://ui-avatars.com/api/?name=${user.displayName || user.email}&background=6A1B9A&color=FFFFFF`;
-        userAvatar.style.display = 'block';
-    } else {
-        authButton.style.display = 'block';
-        userAvatar.style.display = 'none';
-    }
-});
+    authButton.addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider);
+    });
 
-// Init (This remains the same)
-authButton.addEventListener('click', () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
-});
-
-updateConnectionStatus(false);
-    </script>
+    updateConnectionStatus(false);
+ </script>
+    
 
 </body>
 </html>
