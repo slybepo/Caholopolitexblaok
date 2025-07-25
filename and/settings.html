@@ -345,7 +345,7 @@
         const connectUsbBtn = document.getElementById('connectUsbBtn');
         const connectWifiBtn = document.getElementById('connectWifiBtn');
         const ipInput = document.getElementById('ipInput');
-/*
+
         // Terminal Functions
         function appendToTerminal(text) {
             terminalOutput.innerHTML += '\n' + text;
@@ -364,55 +364,79 @@
         }
 
         // ADB Connection
-        async function connectADB(type, address = null) {
-            try {
-                appendToTerminal(`$ Attempting ${type} connection...`);
-                
-                if (adbSocket) {
-                    adbSocket.close();
-                }
-
-                const socketUrl = type === 'usb' 
-                    ? 'ws://127.0.0.1:8080/adb'  // Local proxy like SideQuest uses
-                    : `ws://${address}:5555`;     // Direct WiFi connection
-
-                adbSocket = new WebSocket(socketUrl);
-
-                adbSocket.onopen = async () => {
-                    adbClient = new ADB.Client(adbSocket);
-                    try {
-                        const devices = await adbClient.listDevices();
-                        if (devices.length > 0) {
-                            const model = await adbClient.getProperty('ro.product.model');
-                            updateConnectionStatus(true, `Connected: ${model}`);
-                            appendToTerminal(`$ Successfully connected to ${model}`);
-                        } else {
-                            throw new Error('No devices found');
-                        }
-                    } catch (err) {
-                        appendToTerminal('$ Connection error: ' + err.message);
-                        updateConnectionStatus(false);
-                    }
-                };
-
-                adbSocket.onerror = (err) => {
-                    appendToTerminal(`$ ${type.toUpperCase()} connection failed`);
-                    if (type === 'usb') {
-                        appendToTerminal('$ Make sure SideQuest or ADB server is running on your phone');
-                    }
-                    updateConnectionStatus(false);
-                };
-
-                adbSocket.onclose = () => {
-                    appendToTerminal('$ Connection closed');
-                    updateConnectionStatus(false);
-                };
-
-            } catch (err) {
-                appendToTerminal('$ Connection error: ' + err.message);
-                updateConnectionStatus(false);
-            }
+        async function connectUSB() {
+    try {
+        appendToTerminal('$ Requesting USB access...');
+        
+        // 1. Request USB device access (Meta Quest vendor ID: 0x2833)
+        usbDevice = await navigator.usb.requestDevice({
+            filters: [{ vendorId: 0x2833 }]
+        });
+        
+        appendToTerminal('$ Found device: ' + usbDevice.productName);
+        
+        // 2. Initialize WebADB
+        const adb = new WebADB.WebADB();
+        await adb.connect(usbDevice);
+        
+        // 3. Create ADB client
+        adbClient = adb.getClient();
+        
+        // 4. Verify connection
+        const model = await adbClient.execOut('getprop ro.product.model');
+        updateConnectionStatus(true, `Connected: ${model.trim()}`);
+        appendToTerminal(`$ Connected to ${model.trim()}`);
+        
+        // Start monitoring connection
+        monitorConnection();
+        
+    } catch (error) {
+        appendToTerminal('$ USB Error: ' + error.message);
+        if (error.message.includes('No device selected')) {
+            appendToTerminal('$ Tip: Make sure your Quest is in USB debugging mode');
         }
+        updateConnectionStatus(false);
+    }
+}
+
+// WiFi Connection (unchanged)
+async function connectWifi(ip) {
+    try {
+        appendToTerminal(`$ Connecting to ${ip}:5555...`);
+        adbClient = new WebADB.Client({
+            host: ip,
+            port: 5555
+        });
+        
+        const model = await adbClient.execOut('getprop ro.product.model');
+        updateConnectionStatus(true, `Connected: ${model.trim()}`);
+        appendToTerminal(`$ WiFi Connected to ${model.trim()}`);
+        
+    } catch (error) {
+        appendToTerminal('$ WiFi Error: ' + error.message);
+        updateConnectionStatus(false);
+    }
+}
+
+// Connection monitoring
+async function monitorConnection() {
+    try {
+        while (true) {
+            await adbClient.execOut('echo ping');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+    } catch (error) {
+        appendToTerminal('$ Device disconnected');
+        handleDisconnection();
+    }
+}
+
+// Update your button listeners:
+document.getElementById('connectUsbBtn').addEventListener('click', connectUSB);
+document.getElementById('connectWifiBtn').addEventListener('click', () => {
+    const ip = document.getElementById('ipInput').value.trim();
+    if (ip) connectWifi(ip);
+});
 
         // Execute ADB Command
         async function executeAdbCommand(command) {
@@ -494,82 +518,7 @@
             auth.signInWithPopup(provider);
         });
 
-        updateConnectionStatus(false);*/
-        // Firebase initialization remains the same...
-
-// ADB Client with direct USB access
-let adbClient = null;
-let usbDevice = null;
-
-// New USB Connection Handler
-async function connectUSB() {
-    try {
-        appendToTerminal('$ Requesting USB access...');
-        
-        // 1. Request USB device access (Meta Quest vendor ID: 0x2833)
-        usbDevice = await navigator.usb.requestDevice({
-            filters: [{ vendorId: 0x2833 }]
-        });
-        
-        appendToTerminal('$ Found device: ' + usbDevice.productName);
-        
-        // 2. Initialize WebADB
-        const adb = new WebADB.WebADB();
-        await adb.connect(usbDevice);
-        
-        // 3. Create ADB client
-        adbClient = adb.getClient();
-        
-        // 4. Verify connection
-        const model = await adbClient.execOut('getprop ro.product.model');
-        updateConnectionStatus(true, `Connected: ${model.trim()}`);
-        appendToTerminal(`$ Connected to ${model.trim()}`);
-        
-        // Start monitoring connection
-        monitorConnection();
-        
-    } catch (error) {
-        appendToTerminal('$ USB Error: ' + error.message);
-        if (error.message.includes('No device selected')) {
-            appendToTerminal('$ Tip: Make sure your Quest is in USB debugging mode');
-        }
         updateConnectionStatus(false);
-    }
-}
-
-// WiFi Connection (unchanged)
-async function connectWifi(ip) {
-    try {
-        appendToTerminal(`$ Connecting to ${ip}:5555...`);
-        adbClient = new WebADB.Client({
-            host: ip,
-            port: 5555
-        });
-        
-        const model = await adbClient.execOut('getprop ro.product.model');
-        updateConnectionStatus(true, `Connected: ${model.trim()}`);
-        appendToTerminal(`$ WiFi Connected to ${model.trim()}`);
-        
-    } catch (error) {
-        appendToTerminal('$ WiFi Error: ' + error.message);
-        updateConnectionStatus(false);
-    }
-}
-
-// Connection monitoring
-async function monitorConnection() {
-    try {
-        while (true) {
-            await adbClient.execOut('echo ping');
-            await new Promise(resolve => setTimeout(resolve, 3000));
-        }
-    } catch (error) {
-        appendToTerminal('$ Device disconnected');
-        handleDisconnection();
-    }
-}
-
-// Update your button listeners:
 document.getElementById('connectUsbBtn').addEventListener('click', connectUSB);
 document.getElementById('connectWifiBtn').addEventListener('click', () => {
     const ip = document.getElementById('ipInput').value.trim();
