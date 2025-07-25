@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>probe-app | Quest Developer Tools</title>
+    <title>probe-app | Quest settings</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -267,27 +267,13 @@
         <div class="auth-section">
             <div class="notification-bell" id="notificationBell">
                 <i class="fas fa-bell"></i>
-                <span class="notification-badge" id="notificationBadge">0</span>
+                <span class="notification-badge" id="notificationBadge"></span>
             </div>
-            <button id="authButton" class="auth-btn">Sign In</button>
+            
             <img id="userAvatar" class="user-avatar" src="" alt="User Avatar" style="display: none;">
         </div>
 
-        <div id="userDropdown" class="user-dropdown">
-            <div class="dropdown-item">
-                <i class="fas fa-user"></i>
-                <span>Profile</span>
-            </div>
-            <div class="dropdown-item">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </div>
-            <div class="dropdown-divider"></div>
-            <div id="signOutBtn" class="dropdown-item">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Sign Out</span>
-            </div>
-        </div>
+        
     </nav>
 
     <div class="connection-status" id="connectionStatus">
