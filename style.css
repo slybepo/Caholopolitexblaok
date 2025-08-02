@@ -16,7 +16,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-
+    
         body {
             color: var(--dark-text);
             font-family: 'Montserrat', sans-serif;
@@ -25,7 +25,10 @@
             min-height: 100vh; /* Ensure body takes full height for background */
             background-color: var(--white); /* Fallback */
         }
-
+   .ntd {
+      Text-Decoration: none;
+      color: var(--dark-text);
+       }
         /* Full-page background with gradient and repeating logo */
         .full-page-background {
             position: fixed;
